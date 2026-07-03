@@ -1,148 +1,122 @@
 import { MsEdgeTTS, OUTPUT_FORMAT } from "msedge-tts";
 import * as fs from "fs";
 import * as path from "path";
-import { execSync } from "child_process";
+import { spawnSync } from "child_process";
 import { VideoProps } from "./src/types/video";
+
+// --- Konfigurasi Path ---
+const PATH_KONTEN = path.join(process.cwd(), "konten.json");
+const FOLDER_PUBLIC = path.join(process.cwd(), "public");
 
 interface KontenJson extends VideoProps {
   id: string;
   durasiDetik?: number;
 }
 
-const PATH_KONTEN = path.join(process.cwd(), "konten.json");
-const FOLDER_PUBLIC = path.join(process.cwd(), "public");
-
-function loadKonten(): KontenJson[] {
-  try {
-    if (!fs.existsSync(PATH_KONTEN)) {
-      throw new Error("File konten.json tidak ditemukan.");
-    }
-    const raw = fs.readFileSync(PATH_KONTEN, "utf8");
-    return JSON.parse(raw) as KontenJson[];
-  } catch (error) {
-    console.error("❌ Gagal membaca atau memparsing konten.json:", error);
-    process.exit(1);
-  }
-}
-
-function ensurePublicFolder() {
-  if (!fs.existsSync(FOLDER_PUBLIC)) {
-    fs.mkdirSync(FOLDER_PUBLIC, { recursive: true });
-  }
-}
-
-function dapatkanDurasiMp3(filePath: string): number {
-  const stats = fs.statSync(filePath);
-  const bitrateKbps = 48; 
-  return (stats.size * 8) / (bitrateKbps * 1000);
-}
+// Helper untuk jeda file locking
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 /**
- * ENGINE EKSEKUSI FILE FISIK
+ * UTILS: Eksekusi Kode
  */
 function eksekusiKodeAsli(bahasa: string, kode: string, id: string): string {
-  // Guard: Jika bahasa web murni, skip eksekusi runtime Node/Python
   if (["html", "css", "web"].includes(bahasa)) {
     return "Layout rendered successfully.";
   }
   
-  if (!kode.trim()) return "Tidak ada kode untuk dieksekusi.";
+  if (!kode.trim()) return "Tidak ada kode.";
 
-  const tempJsFile = path.join(process.cwd(), `temp_${id}.js`);
-  const tempPyFile = path.join(process.cwd(), `temp_${id}.py`);
-
+  const extension = bahasa === 'python' ? 'py' : 'js';
+  const runtime = bahasa === 'python' ? 'python' : 'node';
+  const tempFile = path.join(process.cwd(), `temp_${id}.${extension}`);
+  
   try {
-    if (bahasa === "javascript" || bahasa === "typescript") {
-      fs.writeFileSync(tempJsFile, kode, "utf8");
-      const output = execSync(`node "${tempJsFile}"`, { timeout: 3000 }).toString().trim();
-      if (fs.existsSync(tempJsFile)) fs.unlinkSync(tempJsFile);
-      return output;
-    } 
+    fs.writeFileSync(tempFile, kode, "utf8");
     
-    if (bahasa === "python") {
-      fs.writeFileSync(tempPyFile, kode, "utf8");
-      const output = execSync(`python "${tempPyFile}"`, { timeout: 3000 }).toString().trim();
-      if (fs.existsSync(tempPyFile)) fs.unlinkSync(tempPyFile);
-      return output;
-    }
+    const result = spawnSync(runtime, [tempFile], { 
+      timeout: 3000,
+      encoding: 'utf-8' 
+    });
+
+    if (result.error) return `Error: ${result.error.message}`;
+    if (result.stderr) return `Error: ${result.stderr.trim()}`;
     
-    return "Bahasa tidak didukung untuk eksekusi runtime."; 
-  } catch (error: unknown) { // Ubah 'any' jadi 'unknown'
-    if (fs.existsSync(tempJsFile)) fs.unlinkSync(tempJsFile);
-    if (fs.existsSync(tempPyFile)) fs.unlinkSync(tempPyFile);
-
-    // Gunakan type guard untuk memeriksa apakah error memiliki properti stderr
-    if (
-      typeof error === "object" &&
-      error !== null &&
-      "stderr" in error
-    ) {
-      const err = error as { stderr: Buffer }; // Casting aman setelah pengecekan
-      return `Error: ${err.stderr.toString().trim()}`;
+    return result.stdout.trim() || "Kode berhasil dijalankan (tanpa output).";
+  } catch (error: unknown) {
+    // Variabel 'error' digunakan di sini
+    const pesan = error instanceof Error ? error.message : String(error);
+    return `System Error: ${pesan}`;
+  } finally {
+    if (fs.existsSync(tempFile)) {
+      try { 
+        fs.unlinkSync(tempFile); 
+      } catch (e: unknown) { 
+        // Variabel 'e' digunakan untuk logging
+        console.error("Gagal menghapus file temp:", e); 
+      }
     }
-
-    // Jika error adalah instance dari Error, ambil message-nya
-    if (error instanceof Error) {
-      return `Error: ${error.message}`;
-    }
-
-    // Fallback jika error tidak diketahui
-    return `Error: ${String(error)}`;
   }
 }
 
-async function jalankanTTS() {
-  console.log("🔊 Memulai proses generate...");
-  const dataKonten = loadKonten();
-  ensurePublicFolder();
+/**
+ * UTILS: Helper Operasi File
+ */
+function dapatkanDurasiMp3(filePath: string): number {
+  const stats = fs.statSync(filePath);
+  return (stats.size * 8) / (48 * 1000); 
+}
 
+/**
+ * MAIN: Proses Utama
+ */
+async function jalankanTTS(): Promise<void> {
+  console.log("🔊 Memulai proses generate...");
+  
+  if (!fs.existsSync(PATH_KONTEN)) {
+    console.error("❌ konten.json tidak ditemukan.");
+    return;
+  }
+  
+  if (!fs.existsSync(FOLDER_PUBLIC)) fs.mkdirSync(FOLDER_PUBLIC);
+
+  const dataKonten: KontenJson[] = JSON.parse(fs.readFileSync(PATH_KONTEN, "utf8"));
   const tts = new MsEdgeTTS();
   await tts.setMetadata("id-ID-ArdiNeural", OUTPUT_FORMAT.AUDIO_24KHZ_48KBITRATE_MONO_MP3);
 
-  const hasilKontenDiperbarui: KontenJson[] = [];
-
   for (const konten of dataKonten) {
-    if (!konten.id || !konten.narasi?.trim()) continue;
-
-    const targetFolder = path.join(FOLDER_PUBLIC, `folder-${konten.id}`);
-    const finalFile = path.join(FOLDER_PUBLIC, `suara-${konten.id}.mp3`);
-
     try {
-      // Setup Folder
-      if (fs.existsSync(targetFolder)) fs.rmSync(targetFolder, { recursive: true, force: true });
-      fs.mkdirSync(targetFolder, { recursive: true });
+      const { id, bahasa, narasi, judul } = konten;
+      const finalFile = path.join(FOLDER_PUBLIC, `suara-${id}.mp3`);
+      
+      console.log(`🎙️ Memproses: ${judul || id}`);
 
-      // Generate Suara
-      await tts.toFile(targetFolder, konten.narasi, { rate: "0%", pitch: "0Hz", volume: "0%" });
-      const generatedFile = path.join(targetFolder, "audio.mp3");
-      fs.renameSync(generatedFile, finalFile);
-      fs.rmSync(targetFolder, { recursive: true, force: true });
+      await tts.toFile(FOLDER_PUBLIC, narasi, { rate: "0%", pitch: "0Hz", volume: "0%" });
+      const tempAudio = path.join(FOLDER_PUBLIC, "audio.mp3");
+      
+      await sleep(800);
 
-      // Persiapan Kode
-      let kodeUntukDieksekusi = "";
-      if (["html", "css", "web"].includes(konten.bahasa)) {
-        kodeUntukDieksekusi = [konten.html, konten.css, konten.js].filter(Boolean).join("\n\n");
-      } else {
-        kodeUntukDieksekusi = konten.kode ?? "";
-      }
+      fs.copyFileSync(tempAudio, finalFile);
+      fs.unlinkSync(tempAudio);
 
-      // Eksekusi
-      const hasilEksekusi = eksekusiKodeAsli(konten.bahasa, kodeUntukDieksekusi, konten.id);
+      const kodeData = ["html", "css", "web"].includes(bahasa) 
+        ? [konten.html, konten.css, konten.js].filter(Boolean).join("\n\n")
+        : (konten.kode ?? "");
 
-      hasilKontenDiperbarui.push({
-        ...konten,
-        durasiDetik: dapatkanDurasiMp3(finalFile),
-        output: hasilEksekusi
-      });
+      const output = eksekusiKodeAsli(bahasa, kodeData, id);
 
-      console.log(`✅ Selesai: ${konten.judul ?? konten.id}`);
-    } catch (error) {
-      console.error(`❌ Gagal: ${konten.id}`, error);
+      konten.durasiDetik = dapatkanDurasiMp3(finalFile);
+      konten.output = output;
+
+      console.log(`✅ Sukses: ${id}`);
+    } catch (err: unknown) {
+      // Variabel 'err' digunakan untuk logging
+      const pesan = err instanceof Error ? err.message : String(err);
+      console.error(`❌ Gagal ID ${konten.id}:`, pesan);
     }
   }
 
-  fs.writeFileSync(PATH_KONTEN, JSON.stringify(hasilKontenDiperbarui, null, 2), "utf8");
-  console.log("\n🎉 Semua proses selesai.");
+  fs.writeFileSync(PATH_KONTEN, JSON.stringify(dataKonten, null, 2), "utf8");
+  console.log("\n🎉 Selesai!");
 }
 
 jalankanTTS();

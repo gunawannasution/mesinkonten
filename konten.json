@@ -15,7 +15,7 @@
     "kode": "print('Memulai perulangan:')\nfor i in range(1, 4):\n    print(f'-> Baris ke-{i}')",
     "narasi": "Belajar looping di Python gak pake ribet. Cuma butuh tiga baris kode ini, data kamu langsung berulang otomatis ke bawah.",
     "durasiDetik": 7.848,
-    "output": "Memulai perulangan:\n-> Baris ke-1\n-> Baris ke-2\n-> Baris ke-3"
+    "output": "Memulai perulangan:\r\n-> Baris ke-1\r\n-> Baris ke-2\r\n-> Baris ke-3"
   },
   {
     "id": "html-button",
@@ -26,7 +26,7 @@
     "js": "",
     "narasi": "Mau bikin tombol modern yang menyala di website kamu? Salin struktur kode HTML sederhana ini dan lihat hasilnya!",
     "durasiDetik": 7.416,
-    "output": ""
+    "output": "Layout rendered successfully."
   },
   {
     "id": "css-center",
@@ -37,6 +37,6 @@
     "js": "",
     "narasi": "Masih bingung cara bikin elemen posisi ke tengah di CSS? Pakai trik display flex, justify content, dan align items ini, langsung rapi!",
     "durasiDetik": 9.792,
-    "output": ""
+    "output": "Layout rendered successfully."
   }
 ]
