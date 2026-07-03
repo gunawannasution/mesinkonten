@@ -5,7 +5,10 @@
     "jsx": "react-jsx",
     "strict": true,
     "noEmit": true,
-    "lib": ["es2015"],
+    // PERBAIKAN: Masukkan DOM dan DOM.Iterable di dalam sini, gabungkan dengan es2015 bawaan Anda
+    "lib": ["es2015", "DOM", "DOM.Iterable"],
+    // PERBAIKAN: Tambahkan baris ini agar 'path' dan modul Node lainnya dikenali
+    "types": ["node"],
     "esModuleInterop": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
