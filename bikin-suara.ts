@@ -1,4 +1,3 @@
-// bikin-suara.ts
 import { MsEdgeTTS, OUTPUT_FORMAT } from "msedge-tts";
 import * as fs from "fs";
 import * as path from "path";
@@ -21,12 +20,7 @@ function loadKonten(): KontenJson[] {
     const raw = fs.readFileSync(PATH_KONTEN, "utf8");
     return JSON.parse(raw) as KontenJson[];
   } catch (error) {
-    console.error("❌ Gagal membaca atau memparsing konten.json:");
-    if (error instanceof Error) {
-      console.error(error.message);
-    } else {
-      console.error(error);
-    }
+    console.error("❌ Gagal membaca atau memparsing konten.json:", error);
     process.exit(1);
   }
 }
@@ -44,125 +38,111 @@ function dapatkanDurasiMp3(filePath: string): number {
 }
 
 /**
- * ─── ENGINE EKSEKUSI FILE FISIK (100% REAL RUNTIME INTERPRETER) ───
- * Membuat file fisik sementara agar indentasi dan struktur kode terbaca sempurna oleh mesin Node/Python
+ * ENGINE EKSEKUSI FILE FISIK
  */
 function eksekusiKodeAsli(bahasa: string, kode: string, id: string): string {
+  // Guard: Jika bahasa web murni, skip eksekusi runtime Node/Python
+  if (["html", "css", "web"].includes(bahasa)) {
+    return "Layout rendered successfully.";
+  }
+  
+  if (!kode.trim()) return "Tidak ada kode untuk dieksekusi.";
+
   const tempJsFile = path.join(process.cwd(), `temp_${id}.js`);
   const tempPyFile = path.join(process.cwd(), `temp_${id}.py`);
 
   try {
     if (bahasa === "javascript" || bahasa === "typescript") {
-      // Tulis file JS fisik sementara
       fs.writeFileSync(tempJsFile, kode, "utf8");
-      // Eksekusi langsung via Node.js
       const output = execSync(`node "${tempJsFile}"`, { timeout: 3000 }).toString().trim();
-      // Bersihkan file sementara
       if (fs.existsSync(tempJsFile)) fs.unlinkSync(tempJsFile);
       return output;
     } 
     
     if (bahasa === "python") {
-      // Tulis file Python fisik sementara (Menjaga keutuhan indentasi tab/spasi \n)
       fs.writeFileSync(tempPyFile, kode, "utf8");
-      // Eksekusi langsung lewat interpreter Python asli komputer lu
       const output = execSync(`python "${tempPyFile}"`, { timeout: 3000 }).toString().trim();
-      // Bersihkan file sementara
       if (fs.existsSync(tempPyFile)) fs.unlinkSync(tempPyFile);
       return output;
     }
     
-    return ""; 
-} catch (error: unknown) {
-    // Hapus file temporary meskipun terjadi error
-    if (fs.existsSync(tempJsFile)) {
-      fs.unlinkSync(tempJsFile);
-    }
-  
-    if (fs.existsSync(tempPyFile)) {
-      fs.unlinkSync(tempPyFile);
-    }
-  
-    // Ambil pesan error dengan aman
+    return "Bahasa tidak didukung untuk eksekusi runtime."; 
+  } catch (error: unknown) { // Ubah 'any' jadi 'unknown'
+    if (fs.existsSync(tempJsFile)) fs.unlinkSync(tempJsFile);
+    if (fs.existsSync(tempPyFile)) fs.unlinkSync(tempPyFile);
+
+    // Gunakan type guard untuk memeriksa apakah error memiliki properti stderr
     if (
       typeof error === "object" &&
       error !== null &&
       "stderr" in error
     ) {
-      const stderr = (error as { stderr?: Buffer | string }).stderr;
-  
-      if (stderr) {
-        return `Error: ${stderr.toString().trim()}`;
-      }
+      const err = error as { stderr: Buffer }; // Casting aman setelah pengecekan
+      return `Error: ${err.stderr.toString().trim()}`;
     }
-  
+
+    // Jika error adalah instance dari Error, ambil message-nya
     if (error instanceof Error) {
       return `Error: ${error.message}`;
     }
-  
+
+    // Fallback jika error tidak diketahui
     return `Error: ${String(error)}`;
   }
 }
 
 async function jalankanTTS() {
-  console.log("🔊 Memulai konversi teks, eksekusi file fisik, dan generate suara...");
-
+  console.log("🔊 Memulai proses generate...");
   const dataKonten = loadKonten();
   ensurePublicFolder();
 
   const tts = new MsEdgeTTS();
-
-  try {
-    await tts.setMetadata("id-ID-ArdiNeural", OUTPUT_FORMAT.AUDIO_24KHZ_48KBITRATE_MONO_MP3);
-    console.log("✅ Metadata TTS berhasil di-set.");
-  } catch (error) {
-    console.error("❌ Gagal menghubungkan metadata TTS:", error);
-    process.exit(1);
-  }
+  await tts.setMetadata("id-ID-ArdiNeural", OUTPUT_FORMAT.AUDIO_24KHZ_48KBITRATE_MONO_MP3);
 
   const hasilKontenDiperbarui: KontenJson[] = [];
 
   for (const konten of dataKonten) {
-    const idUnik = konten.id;
-    if (!idUnik || !konten.narasi?.trim()) continue;
+    if (!konten.id || !konten.narasi?.trim()) continue;
 
-    const targetFolder = path.join(FOLDER_PUBLIC, `folder-${idUnik}`);
-    const finalFile = path.join(FOLDER_PUBLIC, `suara-${idUnik}.mp3`);
-
-    console.log(`🎙️  Memproses video: ${konten.judul ?? idUnik}`);
+    const targetFolder = path.join(FOLDER_PUBLIC, `folder-${konten.id}`);
+    const finalFile = path.join(FOLDER_PUBLIC, `suara-${konten.id}.mp3`);
 
     try {
+      // Setup Folder
       if (fs.existsSync(targetFolder)) fs.rmSync(targetFolder, { recursive: true, force: true });
       fs.mkdirSync(targetFolder, { recursive: true });
-      if (fs.existsSync(finalFile)) fs.unlinkSync(finalFile);
 
-      // 1. Generate Suara Premium
+      // Generate Suara
       await tts.toFile(targetFolder, konten.narasi, { rate: "0%", pitch: "0Hz", volume: "0%" });
       const generatedFile = path.join(targetFolder, "audio.mp3");
-      if (!fs.existsSync(generatedFile)) throw new Error("File audio tidak ditemukan.");
       fs.renameSync(generatedFile, finalFile);
       fs.rmSync(targetFolder, { recursive: true, force: true });
 
-      const durasi = dapatkanDurasiMp3(finalFile);
+      // Persiapan Kode
+      let kodeUntukDieksekusi = "";
+      if (["html", "css", "web"].includes(konten.bahasa)) {
+        kodeUntukDieksekusi = [konten.html, konten.css, konten.js].filter(Boolean).join("\n\n");
+      } else {
+        kodeUntukDieksekusi = konten.kode ?? "";
+      }
 
-      // 2. EKSEKUSI NYATA VIA FILE FISIK
-      console.log(`💻 Menjalankan file *.py/*.js nyata untuk ID: ${idUnik}...`);
-      const hasilEksekusiNyata = eksekusiKodeAsli(konten.bahasa, konten.kode, idUnik);
+      // Eksekusi
+      const hasilEksekusi = eksekusiKodeAsli(konten.bahasa, kodeUntukDieksekusi, konten.id);
 
       hasilKontenDiperbarui.push({
         ...konten,
-        durasiDetik: durasi,
-        output: hasilEksekusiNyata
+        durasiDetik: dapatkanDurasiMp3(finalFile),
+        output: hasilEksekusi
       });
 
-      console.log(`✅ Sukses Real! Output: "${hasilEksekusiNyata.replace(/\r?\n/g, " ")}"`);
+      console.log(`✅ Selesai: ${konten.judul ?? konten.id}`);
     } catch (error) {
-      console.error(`❌ Gagal memproses ${idUnik}:`, error);
+      console.error(`❌ Gagal: ${konten.id}`, error);
     }
   }
 
   fs.writeFileSync(PATH_KONTEN, JSON.stringify(hasilKontenDiperbarui, null, 2), "utf8");
-  console.log("\n🎉 HORE! Eksekusi file fisik Python & JS selesai. Hasil dijamin 100% Nyata.");
+  console.log("\n🎉 Semua proses selesai.");
 }
 
 jalankanTTS();
