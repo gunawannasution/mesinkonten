@@ -1,69 +1,132 @@
-# 📝 Aplikasi Todo Scalable - Next.js Vanilla Full-Stack
+# 🚀 Mesin Konten TikTok & Shorts (Video Automation Engine)
 
-Aplikasi pencatatan tugas (_Todo List_) berbasis web yang dibangun menggunakan **Next.js modern (App Router)** dan **Vanilla JavaScript murni**. Proyek ini menerapkan arsitektur _Full-Stack_ lokal dengan memanfaatkan **Next.js Server Actions** untuk menyimpan data secara permanen ke dalam database file `db.json`.
+[![Remotion Framework](https://shields.io)](https://remotion.dev)
+[![Engine Status](https://shields.io)](https://github.com)
+[![Type Compliance](https://shields.io)](https://typescriptlang.org)
 
-## ✨ Fitur Utama
+**Mesin Konten** adalah aplikasi otomatisasi berbasis _Data-Driven_ untuk memproduksi video pendek edukasi coding (TikTok, YouTube Shorts, Reels) secara massal tanpa intervensi manual. Cukup masukkan baris data kode pemrograman ke dalam file konfigurasi JSON, dan mesin ini akan otomatis mengompilasi kode, mengisi durasi asinkron suara AI, mencetak dokumen taktik SEO, dan merender video vertikal premium sinematik beresolusi tinggi.
 
-- **CRUD Lengkap (Lokal)**: Tambah tugas, baca daftar tugas, ubah status tugas, dan hapus tugas secara _live_.
-- **Penyimpanan Permanen (Scalable)**: Data tidak hilang saat halaman di-_refresh_ karena disimpan langsung ke file database `db.json` di sisi server.
-- **Auto-Recovery Database**: Sistem server akan otomatis membuatkan file `db.json` baru jika file tersebut tidak sengaja terhapus atau hilang.
-- **Data Revalidation**: Tampilan antarmuka langsung sinkron secara instan begitu ada perubahan data di database menggunakan `revalidatePath`.
-- **Styling Ringan**: Tampilan gelap (_Dark Mode_) minimalis menggunakan utilitas kelas bawaan CSS Tailwind.
+---
 
-## 🚀 Teknologi yang Digunakan
+## ✨ Fitur Utama (Enterprise Features)
 
-- **Framework**: Next.js 15+ (App Router, Client & Server Components)
-- **Bahasa**: Vanilla JavaScript (ES6+, Async/Await, Array Methods)
-- **Database**: Local JSON File System (`fs` Node.js)
+- **100% Data-Driven Automation**: Pemisahan absolut antara logika visual komponen React dan data teks konten (`konten.json`). Produksi ratusan video baru tanpa menyentuh file `.tsx`.
+- **Intelligent Auto-Formatter Engine**: Kode satu baris dari JSON otomatis diuraikan ke bawah lengkap dengan indentasi tabulasi berjenjang 2 spasi ala ekstensi _Prettier_ untuk bahasa HTML, CSS, JavaScript, dan Python.
+- **Dynamic Syntax Highlighting (Dracula Theme)**: Pewarnaan komponen kode secara _real-time_ menggunakan isolasi tokenisasi _Prism.js_ yang disinkronkan ke frame _lifecycle_ Remotion tanpa degradasi performa GPU.
+- **Akurat & Synchronized Runtime**: Menghitung durasi riil audio biner menggunakan parser (_mp3-duration_), melenyapkan bug visual balapan dengan suara, dan memicu SFX klik keyboard mekanikal (`click.mp3`) secara presisi per karakter huruf.
+- **Isolate State Concurrency Protection**: Menggunakan sub-folder temporer unik berbasis ID video (`temp_${id}`) untuk mengunduh suara dari server Microsoft Edge TTS, menjamin keamanan proses _mass production_ bebas dari bug suara tertukar.
+- **Otomatisasi Dokumen SEO**: Setiap kali proses pengunduhan suara selesai, mesin otomatis mencetak berkas `metadata_upload.txt` berisi transkrip takarir (_subtitle_), judul pemicu klik, dan tagar FYP strategis yang siap disalin-tempel.
+- **Visual Sinematik Tinggi Retensi**: Dilengkapi animasi efek _Ambient Zoom_ kamera maju perlahan, pendaran cahaya neon latar belakang (_glow blur background_), kursor balok berdenyut sinuosi, dan garis _progress bar_ tebal yang ramah layar mobile.
 
-## 📂 Struktur Folder Kunci
+---
+
+## 📂 Struktur Arsitektur Folder
 
 ```text
-ai-carousel/
-├── db.json               # File database lokal (menyimpan data tugas)
+mesinkonten/
+├── public/                 # Tempat penyimpanan aset statis
+│   ├── click.mp3           # SFX Klik Keyboard Mekanikal Short Duration
+│   └── suara-*.mp3         # Output Berkas Voice Over AI hasil unduhan
 ├── src/
-│   └── app/
-│       ├── actions.js    # Kode Sisi Server (Logika Baca/Tulis/Hapus file JSON)
-│       ├── page.js       # Kode Sisi Klien (Tampilan UI Aplikasi Utama)
-│       └── layout.js     # Kerangka layout global aplikasi
-└── package.json          # File konfigurasi dependensi proyek
+│   ├── components/         # Atom Komponen Visual Terisolasi
+│   │   ├── CodeBox.tsx     # Kotak Editor dengan Auto-Formatter & Tokenizer
+│   │   └── Header.tsx      # Komponen Judul & Badge Animasi Pegas (Spring)
+│   ├── config/
+│   │   └── themes.ts       # Pusat Aturan Palet Warna Kosmetik Neon Bahasa
+│   ├── templates/
+│   │   └── BasicTutorial.tsx # Jantung Layout Utama & Mesin Live Web Preview
+│   └── Root.tsx            # Konfigurasi Komposisi & Pemetaan Kompilasi Remotion
+├── bikin-suara.ts          # Skrip Backend Utama Otomatisasi Audio & Dokumen SEO
+├── konten.json             # Database Lokal Konten Video Masal Anda
+└── package.json            # Manajemen Pustaka Dependensi Proyek
 ```
 
-## 🛠️ Cara Menjalankan Proyek di Laptop Anda
+---
 
-### 1. Persiapan
+## 🛠️ Langkah Instalasi & Persiapan
 
-Pastikan komputer Anda sudah terinstal [Node.js](https://nodejs.org) (Versi minimal v18.x atau yang terbaru).
+### 1. Prasyarat Sistem
 
-### 2. Instalasi Dependensi
+Pastikan komputer Anda sudah menginstal aplikasi berikut:
 
-Buka terminal/CMD di dalam folder proyek ini, lalu jalankan perintah berikut untuk menginstal modul pendukung:
+- [Node.js (Versi LTS yang direkomendasikan)](https://nodejs.org)
+- [Visual Studio Code](https://visualstudio.com)
+
+### 2. Kloning & Instalasi Dependensi
+
+Buka terminal VS Code di folder proyek Anda, lalu jalankan perintah:
 
 ```bash
+# Jalankan instalasi seluruh bahan pustaka internal mesin
 npm install
 ```
 
-### 3. Menjalankan Server Pengembangan (Localhost)
+### 3. Persiapan File SFX Keyboard
 
-Setelah instalasi selesai, nyalakan server Next.js Anda dengan perintah:
+- Siapkan sebuah file klik tombol keyboard mekanikal berformat `.mp3` (durasi klip di bawah 0.2 detik).
+- Letakkan di dalam folder **`public/`** dan ubah namanya menjadi **`click.mp3`** (huruf kecil semua).
+
+---
+
+## 🚀 Alur Kerja Produksi Massal (Workflow)
+
+### Langkah 1: Input Materi ke Database (`konten.json`)
+
+Buka file `konten.json` di root folder proyek, lalu masukkan deretan topik coding yang ingin Anda buat. Anda bisa memasukkan puluhan baris objek sekaligus menggunakan format standar berikut:
+
+```json
+[
+  {
+    "id": "css-center",
+    "judul": "Trik Bikin Elemen ke Tengah",
+    "bahasa": "web",
+    "html": "<div class='box'>Tengah</div>",
+    "css": ".box{display:flex;justify-content:center;align-items:center;height:100vh;font-size:32px;font-weight:bold;}",
+    "js": "",
+    "narasi": "Masih bingung cara bikin elemen posisi ke tengah di CSS? Pakai trik display flex, justify content, dan align items ini, langsung rapi!"
+  }
+]
+```
+
+### Langkah 2: Jalankan Otomatisasi Backend (Generate Audio & SEO)
+
+Eksekusi skrip generator suara untuk mengunduh Voice Over AI Indonesia asli dari server Microsoft Edge TTS, menghitung durasi milidetik akurat, dan mencetak cetak biru metadata optimasi pencarian:
 
 ```bash
-npm run dev
+npm run suara
 ```
 
-### 4. Akses Aplikasi
+_Hasil eksekusi akan otomatis meng-update properti `durasiDetik` dan `output` di dalam `konten.json` serta memproduksi file `metadata_upload.txt`._
 
-Buka browser kesayangan Anda dan akses alamat berikut:
+### Langkah 3: Pratinjau Video (Studio Preview)
 
-```text
-http://localhost:3000
+Jika Anda ingin melihat pergerakan animasi visual, mendengarkan ketukan suara keyboard klik, dan mengecek _Live Preview Web_ sebelum dicetak, jalankan perintah studio:
+
+```bash
+npm start
 ```
 
-## 💡 Konsep JavaScript yang Dipelajari di Proyek Ini
+_Buka browser di alamat `http://localhost:3000` untuk melihat studio interaktif Remotion._
 
-Proyek ini merupakan sarana latihan yang sangat baik untuk memahami penerapan JavaScript murni di dunia nyata:
+### Langkah 4: Cetak Video Akhir (.MP4)
 
-1. **State Management (`useState`)**: Mengelola perubahan data secara dinamis di browser.
-2. **Side Effects (`useEffect`)**: Mengambil data dari database secara otomatis tepat saat aplikasi pertama kali dibuka.
-3. **Array Methods (`.map()` & `.filter()`)**: Mengulang data list ke dalam HTML dan menyaring data untuk proses penghapusan.
-4. **Async/Await & Fetch**: Mengelola komunikasi asinkronous antara antarmuka klien dan logika server.
+Untuk merender seluruh deretan konten video pendek Anda secara massal menjadi berkas video matang beresolusi tinggi, jalankan perintah kompilator build:
+
+```bash
+npm run build
+```
+
+_Video berformat `.mp4` vertikal siap upload akan tersimpan rapi di dalam folder output proyek Anda._
+
+---
+
+## 📈 Skalabilitas Komersial (SaaS Roadmap)
+
+Infrastruktur **Mesin Konten** ini telah dirancang menggunakan metodologi arsitektur berstandar tinggi yang sangat _scalable_ untuk dikonversi menjadi aplikasi komersial (Software as a Service / SaaS):
+
+1.  **Integrasi AI Content Writer**: Menambahkan satu file skrip otomatisasi Node.js ke API OpenAI (ChatGPT) atau Claude untuk mengisi isi data `konten.json` secara otomatis tanpa ketikan tangan manusia.
+2.  **SaaS Cloud Pipeline**: Mengganti file lokal `konten.json` statis dengan pemicu database relasional (seperti PostgreSQL/MongoDB) yang terhubung dengan form input halaman website pengguna, lalu memicu kompilasi server (_Remotion Lambda / Headless Rendering_) untuk menghasilkan video unduhan premium berbayar.
+
+---
+
+⭐ _Jangan lupa berikan bintang (Star) pada repositori ini jika proyek otomatisasi ini membantu efisiensi produksi video harian Anda!_
