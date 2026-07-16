@@ -1,42 +1,13 @@
 [
   {
-    "id": "js-variabel",
-    "judul": "Cara Membuat Variabel di JavaScript",
-    "bahasa": "javascript",
-    "kode": "const nama = 'Budi';\nlet umur = 20;\nconsole.log(`Halo, nama saya ${nama} dan umur saya ${umur} tahun.`);",
-    "narasi": "Gini nih cara gampang buat nampilin teks gabungan di bahasa pemrograman JavaScript. Cukup pakai teknik string literal di dalam konsol log aja!",
-    "durasiDetik": 8.592,
-    "output": "➔ Halo, nama saya Budi dan umur saya 20 tahun."
-  },
-  {
-    "id": "py-loop",
-    "judul": "Belajar Looping Mudah di Python",
-    "bahasa": "python",
-    "kode": "print('Memulai perulangan:')\nfor i in range(1, 4):\n    print(f'-> Baris ke-{i}')",
-    "narasi": "Belajar looping di Python gak pake ribet. Cuma butuh tiga baris kode ini, data kamu langsung berulang otomatis ke bawah.",
-    "durasiDetik": 7.848,
-    "output": "➔ Memulai perulangan:\r\n-> Baris ke-1\r\n-> Baris ke-2\r\n-> Baris ke-3"
-  },
-  {
-    "id": "html-button",
-    "judul": "Bikin Tombol Keren dengan HTML",
+    "id": "css-neon-glow-30s",
+    "judul": "Rahasia Teks Menyala Neon CSS Modern ⚡",
     "bahasa": "web",
-    "html": "<button class='btn'>KLIK DI SINI</button>",
-    "css": ".btn{padding:15px 30px;font-size:20px;background:#00ffcc;border:none;border-radius:8px;font-weight:bold;cursor:pointer;box-shadow:0 10px 20px rgba(0,255,204,0.3);}",
+    "html": "<div class='container'><h1 class='neon-text'>NEON CYBER</h1></div>",
+    "css": "body{margin:0;background-color:#080a10;display:flex;justify-content:center;align-items:center;height:100vh;}.container{padding:20px;text-align:center;}.neon-text{font-size:70px;color:#fff;font-family:sans-serif;font-weight:900;letter-spacing:6px;text-shadow:0 0 5px #00ffcc,0 0 15px #00ffcc,0 0 40px #00ffcc,0 0 80px #00ffcc;}",
     "js": "",
-    "narasi": "Mau bikin tombol modern yang menyala di website kamu? Salin struktur kode HTML sederhana ini dan lihat hasilnya!",
-    "durasiDetik": 7.416,
-    "output": "Layout rendered successfully."
-  },
-  {
-    "id": "css-center",
-    "judul": "Trik Bikin Elemen ke Tengah",
-    "bahasa": "web",
-    "html": "<div class='box'>Tengah</div>",
-    "css": ".box{display:flex;justify-content:center;align-items:center;height:100vh;font-size:32px;font-weight:bold;}",
-    "js": "",
-    "narasi": "Masih bingung cara bikin elemen posisi ke tengah di CSS? Pakai trik display flex, justify content, dan align items ini, langsung rapi!",
-    "durasiDetik": 9.792,
-    "output": "Layout rendered successfully."
+    "narasi": "Masih bingung cara bikin efek teks menyala ala neon futuristik di website kamu? Sini kita bedah rahasianya pake CSS modern! Langkah pertama, wajib hukumnya buat setup background body jadi super gelap, di sini kita pake warna hitam onyx supaya pancaran cahaya neonnya keluar kontras. Langkah kedua, pastikan font-weight teks kamu diatur ke ukuran paling tebal atau sembilan ratus, tujuannya biar area pijaran cahayanya makin luas dan kokoh. Nah, langkah ketiga ini dia kunci utamanya, kita gunain properti text-shadow yang ditumpuk empat lapis sekaligus dipisahkan tanda koma. Lapisan pertama berukuran lima pixel untuk pendaran inti, disusul lapisan lima belas, empat puluh, sampai delapan puluh pixel untuk menciptakan efek kabut cahaya luar yang tebal. Gabungan trik ini bikin desain web kamu langsung kelihatan premium, estetik, dan auto-FYP!",
+    "output": "Layout rendered successfully.",
+    "durasiDetik": 49.776
   }
 ]

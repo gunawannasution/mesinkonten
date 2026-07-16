@@ -1,9 +1,8 @@
-import React, { useMemo } from "react";
+import React, { useMemo, useRef, useEffect } from "react";
 import { useCurrentFrame, useVideoConfig, interpolate, Audio, staticFile } from "remotion";
 import { LANGUAGE_THEMES } from "../config/themes";
 import Prism from "prismjs";
 
-// Load blueprint tokenisasi bahasa dasar global resmi
 import "prismjs/components/prism-javascript";
 import "prismjs/components/prism-typescript";
 import "prismjs/components/prism-python";
@@ -17,14 +16,14 @@ interface CodeBoxProps {
 }
 
 /**
- * INTELLIGENT AUTO-FORMATTER ENGINE
- * Secara pintar mendeteksi susunan sintaksis baris baru dan menambahkan indentasi tabulasi berjenjang
- * untuk HTML, CSS, JS, dan Python agar tidak memanjang lurus ke kanan.
+ * RE-ARCHITECTED AUTO-FORMATTER ENGINE (ANTI-OVERFLOW FIX)
+ * Secara pintar memotong baris setelah tanda kurung {, }, titik koma ;, dan tanda koma , khusus properti tebal.
  */
 function superFormatter(kodeMentah: string, bahasa: string): string {
   if (!kodeMentah) return "";
   const lang = bahasa.toLowerCase();
   
+  // Jika kode sudah diformat manual menggunakan baris baru \n, gunakan kode asli
   if (kodeMentah.includes("\n")) return kodeMentah;
 
   let hasil = "";
@@ -34,14 +33,16 @@ function superFormatter(kodeMentah: string, bahasa: string): string {
   if (["css", "javascript", "js", "typescript", "ts"].includes(lang)) {
     for (let i = 0; i < teks.length; i++) {
       const char = teks[i];
+      
       if (char === "{") {
         indent++;
         hasil += " {\n" + "  ".repeat(indent);
       } else if (char === "}") {
         indent = Math.max(0, indent - 1);
-        hasil += "\n" + "  ".repeat(indent) + "}";
+        // Pastikan tidak menyisipkan baris kosong ganda sebelum kurung tutup
+        hasil = hasil.trimEnd(); 
+        hasil += "\n" + "  ".repeat(indent) + "}\n" + "  ".repeat(indent);
       } else if (char === ";") {
-        // PERBAIKAN TS(2448): Deklarasikan 'databaseLastIndex' terlebih dahulu di atas sebelum digunakan
         const databaseLastIndex = hasil.lastIndexOf("\n");
         const diDalamLoopFor = (hasil.lastIndexOf("for") > databaseLastIndex && !hasil.slice(hasil.lastIndexOf("for")).includes(")"));
         
@@ -50,11 +51,29 @@ function superFormatter(kodeMentah: string, bahasa: string): string {
         } else {
           hasil += ";\n" + "  ".repeat(indent);
         }
+      } else if (char === ",") {
+        // KUNCI UTAMA: Jika mendeteksi tanda koma di dalam properti panjang seperti text-shadow,
+        // paksa potong baris baru ke bawah dan berikan indentasi tambahan agar tidak meluber kesamping!
+        const barisSekarang = hasil.slice(hasil.lastIndexOf("\n"));
+        if (barisSekarang.includes("text-shadow") || barisSekarang.includes("box-shadow") || barisSekarang.includes("gradient") || barisSekarang.length > 30) {
+          hasil += ",\n" + "  ".repeat(indent + 1); // Tambah 1 level tab agar menonjol menjorok ke dalam
+        } else {
+          hasil += ", ";
+        }
       } else {
+        // Cegah penumpukan spasi kosong berantakan di awal baris baru
+        if (char === " " && (hasil.endsWith("\n") || hasil.endsWith("  "))) {
+          continue;
+        }
         hasil += char;
       }
     }
-    return hasil.replace(/;\s*\n\s*}/g, ";\n}").trim();
+    
+    // Pembersihan akhir (Garbage Character Trim) untuk membuang kurung kurawal kesasar di baris awal/akhir
+    return hasil
+      .replace(/^\s*}\s*/, "") // Hapus kurung tutup yang nyasar di paling atas video kamu!
+      .replace(/\n\s*\n/g, "\n") // Buang baris kosong ganda
+      .trim();
   }
 
   return kodeMentah;
@@ -67,6 +86,7 @@ export const CodeBox: React.FC<CodeBoxProps> = ({
 }) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   const theme = LANGUAGE_THEMES[bahasa] || {
     primaryColor: "#00ffcc",
@@ -76,6 +96,14 @@ export const CodeBox: React.FC<CodeBoxProps> = ({
   const kodeTerformatRapi = useMemo(() => {
     return superFormatter(kode, bahasa);
   }, [kode, bahasa]);
+
+  // 1. SOLUSI UPGRADE A: Dynamic Font Sizing (Mengecilkan font otomatis jika kode sangat panjang)
+  const dynamicFontSize = useMemo(() => {
+    const panjangKarakter = kodeTerformatRapi.length;
+    if (panjangKarakter > 300) return 24; // Sangat panjang -> font diperkecil ke 24px
+    if (panjangKarakter > 180) return 28; // Cukup panjang -> font diperkecil ke 28px
+    return 34; // Normal standar TikTok -> 34px
+  }, [kodeTerformatRapi]);
 
   const prismLang = useMemo(() => {
     const lang = bahasa.toLowerCase();
@@ -104,7 +132,6 @@ export const CodeBox: React.FC<CodeBoxProps> = ({
   );
   const isTombolDitekan = jumlahKarakterTampil > karakterFrameSebelumnya && frame <= totalFrameKetik;
 
-  // MESIN PENOLONG MULTI-TOKENIZER
   const kodeBerwarnaHtml = useMemo(() => {
     const lang = bahasa.toLowerCase();
     
@@ -120,12 +147,29 @@ export const CodeBox: React.FC<CodeBoxProps> = ({
       }).join("\n\n");
     }
 
-    // PERBAIKAN TS(6133): Membaca kembali variabel 'prismLang' untuk bahasa mandiri agar tidak menganggur
     const namaBahasaPrism = lang === "py" ? "python" : (lang === "css" ? "css" : "javascript");
     return Prism.highlight(teksTerpotong, prismLang, namaBahasaPrism);
   }, [teksTerpotong, bahasa, prismLang]);
 
-  // Detak denyut kursor (Pulsing Effect) menggunakan gelombang Sinus matematika
+  // 2. SOLUSI UPGRADE B: Smooth Auto-Scrolling Linier Berbasis Progres Frame Ketikan
+  // Menghitung pergeseran ke atas (Y) secara bertahap seiring teks bertambah panjang
+  const totalBaris = kodeTerformatRapi.split("\n").length;
+  const barisMaksimalAman = dynamicFontSize === 34 ? 7 : (dynamicFontSize === 28 ? 9 : 11);
+  
+  const translateY = useMemo(() => {
+    if (totalBaris <= barisMaksimalAman) return 0;
+    
+    // Mulai melakukan scrolling saat proses mengetik sudah berjalan 40%
+    const frameMulaiScroll = totalFrameKetik * 0.4;
+    // Berhenti scroll tepat di akhir pengetikan
+    const totalJarakScrollY = (totalBaris - barisMaksimalAman) * (dynamicFontSize * 1.6); // 1.6 adalah lineHeight
+    
+    return interpolate(frame, [frameMulaiScroll, totalFrameKetik], [0, -totalJarakScrollY], {
+      extrapolateLeft: "clamp",
+      extrapolateRight: "clamp",
+    });
+  }, [frame, totalBaris, totalFrameKetik, barisMaksimalAman, dynamicFontSize]);
+
   const kursorOpacity = interpolate(Math.sin(frame * 0.15), [-1, 1], [0.4, 1]);
 
   return (
@@ -155,6 +199,7 @@ export const CodeBox: React.FC<CodeBoxProps> = ({
           borderBottom: "1px solid rgba(255,255,255,0.06)",
           background: "rgba(255,255,255,0.01)",
           flexShrink: 0,
+          zIndex: 10,
         }}
       >
         <div style={{ width: 14, height: 14, borderRadius: "50%", background: "#ff5f57" }} />
@@ -175,7 +220,9 @@ export const CodeBox: React.FC<CodeBoxProps> = ({
         </div>
       </div>
 
+      {/* Code Editor Workspace */}
       <div
+        ref={scrollContainerRef}
         style={{
           flex: 1,
           padding: "30px 34px",
@@ -183,6 +230,7 @@ export const CodeBox: React.FC<CodeBoxProps> = ({
           alignItems: "flex-start",
           justifyContent: "flex-start",
           overflow: "hidden",
+          position: "relative",
         }}
       >
         <style>{`
@@ -203,7 +251,9 @@ export const CodeBox: React.FC<CodeBoxProps> = ({
             width: "100%",
             color: "#f8f8f2",
             fontFamily: "'Fira Code', monospace",
-            fontSize: 34,
+            // UPGRADE KUNCI: Menerapkan ukuran font dinamis & animasi translasi Y (Auto-Scrolling)
+            fontSize: dynamicFontSize,
+            transform: `translateY(${translateY}px)`,
             fontWeight: 500,
             lineHeight: 1.6,
             whiteSpace: "pre-wrap", 
@@ -211,22 +261,23 @@ export const CodeBox: React.FC<CodeBoxProps> = ({
             overflowWrap: "break-word",
             tabSize: 2,
             letterSpacing: -0.5,
+            transition: "transform 0.1s linear", // Membuat pergerakan scroll terasa linear & mulus
           }}
         >
           <code dangerouslySetInnerHTML={{ __html: kodeBerwarnaHtml }} />
           
-          {/* Kursor Ketik Balok Neon Menyala & Berdenyut */}
+          {/* Kursor Ketik Balok Neon Menyala */}
           {frame <= totalFrameKetik && (
             <span
               style={{
                 display: "inline-block",
                 width: "12px",
-                height: "36px",
+                height: `${dynamicFontSize + 2}px`,
                 backgroundColor: theme.primaryColor,
                 marginLeft: "6px",
                 verticalAlign: "middle",
                 opacity: kursorOpacity,
-                boxShadow: `0 0 15px ${theme.primaryColor}, 0 0 30px ${theme.primaryColor}`,
+                boxShadow: `0 0 15px ${theme.primaryColor}`,
               }}
             />
           )}

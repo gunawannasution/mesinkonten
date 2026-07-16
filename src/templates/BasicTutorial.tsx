@@ -39,27 +39,43 @@ export const BasicTutorial: React.FC<VideoProps> = ({
       }${js ? js : ""}`.trim()
     : kode;
 
+  // =======================================================
+  // CONFIG TIMES & DURATIONS
+  // =======================================================
   const startTypingFrame = 30;
   const totalLength = Math.max(fullCode.length, 1);
   const totalFrameKetik = Math.min(
     Math.ceil(totalLength * 1.2), 
-    Math.floor(durationInFrames * 0.7)
+    Math.floor(durationInFrames * 0.65)
   );
   const durasiKetikDetik = totalFrameKetik / fps;
   const typingEndFrame = startTypingFrame + totalFrameKetik;
 
+  // =======================================================
+  // TYPING LOGIC FOR WEB PREVIEW
+  // =======================================================
   const typingProgress = Math.max(
     0,
     Math.min((frame - startTypingFrame) / Math.max(totalFrameKetik, 1), 1)
   );
-  const currentCharCount = Math.floor(totalLength * typingProgress);
+
+  const currentCharCount = frame >= typingEndFrame 
+    ? totalLength 
+    : Math.floor(totalLength * typingProgress);
+
   const liveFullCodeForWeb = fullCode.slice(0, currentCharCount);
 
+  // =======================================================
+  // SFX CLICK KEYBOARD TRACKER
+  // =======================================================
   const charFrameSebelumnya = Math.floor(
     totalLength * Math.max(0, Math.min((frame - 1 - startTypingFrame) / Math.max(totalFrameKetik, 1), 1))
   );
   const isMengetik = currentCharCount > charFrameSebelumnya && frame >= startTypingFrame && frame <= typingEndFrame;
 
+  // =======================================================
+  // OUTPUT GENERATOR
+  // =======================================================
   const outputStartFrame = typingEndFrame + 15;
   const cleanOutput = output?.trim() || "➔ Program executed successfully.";
   
@@ -70,40 +86,43 @@ export const BasicTutorial: React.FC<VideoProps> = ({
   const outputChars = Math.floor(cleanOutput.length * outputProgress);
   const liveOutputText = cleanOutput.slice(0, outputChars);
 
+  // =======================================================
+  // ACCURATE WEB PREVIEW SEGMENTATION
+  // =======================================================
   let previewHtml = "";
   let previewCss = "";
 
   if (isWeb) {
-    if (html && liveFullCodeForWeb.length <= html.length) {
-      previewHtml = liveFullCodeForWeb;
-    } else if (html) {
+    if (frame >= typingEndFrame) {
       previewHtml = html;
-      const sisaTeks = liveFullCodeForWeb.slice(html.length + 2);
-      if (css) {
-        previewCss = sisaTeks.slice(0, css.length);
+      previewCss = css;
+    } else {
+      if (html && liveFullCodeForWeb.length <= html.length) {
+        previewHtml = liveFullCodeForWeb;
+      } else if (html) {
+        previewHtml = html;
+        const sisaTeks = liveFullCodeForWeb.slice(html.length + 2);
+        if (css) {
+          previewCss = sisaTeks.slice(0, css.length);
+        }
+      } else if (css) {
+        previewCss = liveFullCodeForWeb.slice(0, css.length);
       }
-    } else if (css) {
-      previewCss = liveFullCodeForWeb.slice(0, css.length);
     }
   }
 
+  // =======================================================
+  // CINEMATIC ANIMATIONS
+  // =======================================================
   const entrance = spring({
     frame: Math.max(0, frame - startTypingFrame),
     fps,
     config: { damping: 15, mass: 0.6 },
   });
 
-  // UPGRADE ANIMASI: Kamera bergerak maju perlahan dari awal sampai akhir video (Ambient Zoom)
-  // Membuat video terasa dinamis dan tidak membosankan bagi mata penonton
   const cameraScale = interpolate(frame, [0, durationInFrames], [1.02, 1.07]);
-  const cameraY = interpolate(frame, [0, startTypingFrame, typingEndFrame], [-10, 3, 0]);
+  const cameraY = interpolate(frame, [0, startTypingFrame, typingEndFrame], [-15, 5, 0]);
   const progressPercent = (frame / durationInFrames) * 100;
-
-  // ANIMASI UPGRADE: Opasitas teks output console memudar naik secara berjenjang
-  const outputOpacity = interpolate(frame, [outputStartFrame, outputStartFrame + 10], [0, 1], {
-    extrapolateLeft: "clamp",
-    extrapolateRight: "clamp",
-  });
 
   const resolvedSuaraUrl = useMemo(() => {
     if (!suaraUrl) return "";
@@ -115,8 +134,15 @@ export const BasicTutorial: React.FC<VideoProps> = ({
     return staticFile(suaraUrl);
   }, [suaraUrl]);
 
+  // =======================================================
+  // SUB-RENDER PREVIEW (KUNCI TATA LETAK TETAP DI TEMPAT)
+  // =======================================================
   const renderPreview = () => {
-    if (frame < startTypingFrame) return <div style={{ flex: 1 }} />;
+    if (frame < startTypingFrame) {
+      return (
+        <div style={{ width: "100%", height: "83%", background: "#0b0f19", borderRadius: 20, border: "1px solid rgba(255,255,255,0.02)" }} />
+      );
+    }
 
     if (isWeb) {
       const srcDoc = `
@@ -124,29 +150,45 @@ export const BasicTutorial: React.FC<VideoProps> = ({
         <html>
         <head>
           <style>
-            body { 
+            html, body { 
               margin: 0; 
-              padding: 25px; 
-              font-family: sans-serif; 
-              color: #ffffff; 
+              padding: 0; 
+              width: 100%;
+              height: 100%;
+              overflow: hidden; 
+              box-sizing: border-box;
               background-color: #0b0f19; 
+              color: #ffffff; 
+              font-family: sans-serif;
               display: flex;
               justify-content: center;
               align-items: center;
-              height: 80vh;
             }
+            
+            .preview-wrapper {
+              width: 100%;
+              height: 100%;
+              padding: 25px;
+              display: flex;
+              justify-content: center;
+              align-items: center;
+              box-sizing: border-box;
+            }
+
             ${previewCss}
           </style>
         </head>
         <body>
-          ${previewHtml}
-          ${typingProgress >= 1 && js ? `<script>try { ${js} } catch(e) { console.error(e); }</script>` : ""}
+          <div class='preview-wrapper'>
+            ${previewHtml}
+          </div>
+          ${frame >= typingEndFrame && js ? `<script>try { ${js} } catch(e) { console.error(e); }</script>` : ""}
         </body>
         </html>
       `;
 
       return (
-        <div style={{ flex: 1, background: "#0b0f19", borderRadius: 20, overflow: "hidden", transform: `scale(${entrance})`, opacity: entrance, border: "1px solid rgba(255,255,255,0.08)", boxShadow: "0 20px 50px rgba(0,0,0,0.3)" }}>
+        <div style={{ width: "100%", height: "83%", background: "#0b0f19", borderRadius: 20, overflow: "hidden", transform: `scale(${entrance})`, opacity: entrance, border: "1px solid rgba(255,255,255,0.08)", boxShadow: "0 20px 50px rgba(0,0,0,0.3)" }}>
           <div style={{ height: 52, background: "#111625", borderBottom: "1px solid rgba(255,255,255,0.06)", display: "flex", alignItems: "center", padding: "0 20px", gap: 12 }}>
             <div style={{ display: "flex", gap: 6 }}>
               <div style={{ width: 12, height: 12, borderRadius: "50%", background: "#ff5f56" }} />
@@ -155,7 +197,7 @@ export const BasicTutorial: React.FC<VideoProps> = ({
             </div>
             <div style={{ color: "#9ca3af", fontSize: 14, fontFamily: "sans-serif", fontWeight: 600, marginLeft: 10 }}>🌐 LIVE PREVIEW</div>
           </div>
-          <IFrame srcDoc={srcDoc} sandbox="allow-scripts" style={{ width: "100%", height: "100%", border: "none" }} />
+          <IFrame srcDoc={srcDoc} sandbox="allow-scripts" scrolling="no" style={{ width: "100%", height: "calc(100% - 52px)", border: "none", overflow: "hidden" }} />
         </div>
       );
     }
@@ -163,7 +205,8 @@ export const BasicTutorial: React.FC<VideoProps> = ({
     return (
       <div
         style={{
-          flex: 1,
+          width: "100%",
+          height: "83%",
           borderRadius: 20,
           overflow: "hidden",
           transform: `scale(${entrance})`,
@@ -200,8 +243,7 @@ export const BasicTutorial: React.FC<VideoProps> = ({
             <div style={{ color: "#fbbf24", fontSize: 22, fontWeight: 500 }}>➔ Running...</div>
           )}
 
-          {/* UPGRADE VISUAL: Hasil output memudar naik secara lembut menggunakan variabel outputOpacity */}
-          <pre style={{ margin: 0, fontSize: 24, lineHeight: 1.7, whiteSpace: "pre-wrap", color: theme.primaryColor, textShadow: `0 0 12px ${theme.primaryColor}40`, opacity: outputOpacity }}>
+          <pre style={{ margin: 0, fontSize: 24, lineHeight: 1.7, whiteSpace: "pre-wrap", color: theme.primaryColor, textShadow: `0 0 12px ${theme.primaryColor}40` }}>
             {liveOutputText}
           </pre>
         </div>
@@ -209,42 +251,58 @@ export const BasicTutorial: React.FC<VideoProps> = ({
     );
   };
 
+  // =======================================================
+  // VIEW SCREEN ASSEMBLY (STABLE FIXED GRID MASK - UTUH)
+  // =======================================================
   return (
     <AbsoluteFill
       style={{
-        background: "#08090d", // Sedikit lebih gelap premium untuk memaksimalkan kontras neon glow
+        background: "#08090d",
         color: "#fff",
         padding: "50px 60px",
         display: "flex",
         flexDirection: "column",
         overflow: "hidden",
+        boxSizing: "border-box",
         transform: `scale(${cameraScale}) translateY(${cameraY}px)`,
       }}
     >
+      {/* Memutar Voice Over AI secara aman menggunakan jalur tersanitasi */}
       {resolvedSuaraUrl && <Audio src={resolvedSuaraUrl} />}
+      
+      {/* Memutar SFX Klik Mekanikal presisi per karakter */}
       {isMengetik && <Audio src={staticFile("/click.mp3")} volume={0.25} />}
 
-      <Header judul={judul} bahasa={bahasa} />
+      {/* Area Atas: Header Judul Video (Tinggi dikunci 24%) */}
+      <div style={{ height: "24%", flexShrink: 0, boxSizing: "border-box" }}>
+        <Header judul={judul} bahasa={bahasa} />
+      </div>
 
-      <div style={{ display: "flex", flexDirection: "column", flex: 1, gap: 24, marginTop: 20 }}>
-        <div style={{ flex: 1.2 }}>
+      {/* Area Utama: Split-Screen Vertikal (Tinggi dikunci 76%) */}
+      <div style={{ height: "76%", display: "flex", flexDirection: "column", gap: 30, boxSizing: "border-box", paddingBottom: 40 }}>
+        
+        {/* PANEL ATAS: Tinggi CodeBox dikunci pas 48% (Kebal dari melar / menendang) */}
+        <div style={{ height: "48%", width: "100%", flexShrink: 0, boxSizing: "border-box" }}>
           <CodeBox kode={fullCode} bahasa={bahasa} durasiKetikDetik={durasiKetikDetik} />
         </div>
         
-        <div style={{ flex: 1 }}>
-          <div style={{ fontSize: 18, fontWeight: 700, marginBottom: 10, color: "#6272a4" }}>
+        {/* PANEL BAWAH: Jendela Live Preview / Terminal Konsol dikunci pas 48% */}
+        <div style={{ height: "48%", width: "100%", flexShrink: 0, boxSizing: "border-box" }}>
+          <div style={{ fontSize: 18, fontWeight: 700, marginBottom: 8, color: "#6272a4", fontFamily: "sans-serif" }}>
             {isWeb ? "🌐 Live Preview" : "💻 Output Console"}
           </div>
           {renderPreview()}
         </div>
+
       </div>
 
+      {/* Garis Kemajuan Progress Bar Tebal Menyala Khas TikTok */}
       <div
         style={{
           position: "absolute",
           bottom: 0,
           left: 0,
-          height: 10, // Sedikit lebih tebal agar bar kemajuan terlihat jelas di HP
+          height: 10,
           width: `${progressPercent}%`,
           background: `linear-gradient(90deg, ${theme.primaryColor}, #ffffff)`,
           boxShadow: `0 0 15px ${theme.primaryColor}`,
@@ -253,3 +311,4 @@ export const BasicTutorial: React.FC<VideoProps> = ({
     </AbsoluteFill>
   );
 };
+
