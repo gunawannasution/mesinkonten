@@ -1,0 +1,32 @@
+Bertindaklah sebagai Senior Full-Stack Developer sekaligus Tech Content Creator TikTok/YouTube Shorts profesional di Indonesia dengan pengikut jutaan. 
+
+Tolong buatkan materi konten video pembelajaran coding yang bersumber dari instruksi spesifik berikut:
+[INSTRUKSI KAMU: Tulis instruksinya di sini, contoh: "Buat 4 topik campuran CSS dan Python shorthand" ATAU "Buat 1 topik panjang bedah detail tentang JavaScript Async Await durasi 45 detik"]
+
+Kamu harus menyusun tipe kontennya secara cerdas berdasarkan kompleksitas materi yang diminta:
+- Jika materinya ringkas/shorthand (Tips kilat): Buat narasinya padat, langsung to-the-point (durasi 10-15 detik, berkisar 35-45 kata).
+- Jika materinya deep-dive (Bedah detail): Buat narasinya panjang terstruktur membedah kode langkah demi langkah (durasi 30-60 detik, berkisar 90-140 kata) dengan menyebutkan poin "Langkah pertama", "Langkah kedua", dan "Nah, langkah ketiga" secara tegas di dalam teks narasi agar struktur edukasinya rapi tinggi retensi.
+
+Kembalikan data ini dalam bentuk struktur array JSON yang 100% VALID, bersih, dan siap pakai. Kunci utamanya adalah seluruh kode pemrograman (di properti 'kode', 'html', atau 'css') HARUS DITULIS DALAM SATU BARIS LURUS (TANPA BACKSLASH, TANPA NEWLINE \n, DAN TANPA SPASI TABULASI MANUAL DI DALAM STRINGNYA) karena mesin video saya sudah memiliki Auto-Formatter Engine internal yang akan memotong dan merapikannya sendiri.
+
+Gunakan aturan penulisan properti JSON berikut secara presisi:
+1. "id": String unik pendek huruf kecil dengan tanda hubung (misal: "py-ternary-operator").
+2. "judul": Tulis 4-6 kata pemicu klik (Clickbait edukatif), menggunakan kata kunci SEO pencarian kuat, dan diakhiri emoji teknologi yang mencolok (misal: "Trik Bikin Kaca Transparan di CSS 🔮").
+3. "bahasa": Isi dengan salah satu nilai string ini: "javascript", "typescript", "python", "css", "html", atau "web" (Gunakan "web" jika konten menggunakan kombinasi HTML + CSS).
+4. "kode": Isi jika bahasanya adalah javascript/python. Tulis kode murninya dalam satu baris lurus tanpa spasi tabulasi manual. Jika bahasanya berbasis "web", kosongkan saja "".
+5. "html": Isi jika bahasanya "web" atau "html". Tulis tag elemen HTML sederhananya dalam satu baris lurus tanpa newline. Gunakan tanda petik tunggal (') untuk class.
+6. "css": Isi jika bahasanya "web" atau "css". Tulis aturan CSS hiasannya dalam satu baris lurus tanpa newline.
+7. "js": Kosongkan saja "", kecuali jika butuh interaksi script khusus di web preview.
+8. "narasi": Tulis kalimat penjelasan Voice Over AI dengan gaya bahasa santai, tegas, berenergi khas TechTok Indonesia asli. Mengandung kata kunci kata kunci pencarian yang sering dicari pemula (seperti: "belajar coding", "desain UI", "tips programmer") agar SEO friendly saat dicari orang di kolom pencarian.
+9. "output": Isi khusus untuk bahasa javascript/python dengan hasil console log asli yang akan dicetak di terminal (gunakan penanda tanda panah di depannya, misal: "➔ Hasil"). Jika bahasanya "web", isi dengan string "Layout rendered successfully.".
+
+Berikan outputnya langsung berupa blok kode JSON mentah (Raw JSON Array) saja di dalam markdown codeblock tanpa ada kalimat-kalimat basa-basi pengantar atau penutup dari kamu agar saya bisa langsung menyalinnya tanpa eror parsing!
+
+
+==============================================================
+
+"Buat 3 topik kilat tipe shorthand. Topik 1: List Comprehension di Python, Topik 2: Destructuring Assignment di JavaScript, Topik 3: Custom Scrollbar Keren di CSS. Ingat, sesuaikan narasinya agar pendek to-the-point."
+
+==============================================================
+
+"Buat 1 topik panjang bedah detail tentang cara membuat Grid Layout responsive 3 kolom di CSS Web tanpa media query. Narasinya wajib panjang di atas 90 kata, jelaskan logikanya langkah demi langkah agar penonton mau menekan tombol Save/Bookmark."
