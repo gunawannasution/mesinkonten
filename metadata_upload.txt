@@ -4,28 +4,28 @@
 
 ▶️ ID KOMPOSISI REMOTION : js-variabel
 📌 JUDUL VIDEO OPTIMAL   : Rahasia Cara Membuat Variabel di JavaScript! 💻
-📝 DESKRIPSI PLATFORM    : Masih bingung tentang hal ini? Yuk simak tutorial singkat javascript untuk pemula. Solusi praktis agar kode rapi, efisien, dan mudah dipahami. Jangan lupa simpan video ini biar gak lupa!
+📝 DESKRIPSI PLATFORM    : Masih bingung tentang hal ini? Yuk simak tutorial singkat javascript untuk pemula. Solusi praktis agar kode rapi, efisien, dan mudah dipahami. Simpan video ini biar gak lupa!
 💬 TRANSKRIP SUARA (VO)  : "Gini nih cara gampang buat nampilin teks gabungan di bahasa pemrograman JavaScript. Cukup pakai teknik string literal di dalam konsol log aja!"
 🏷️ HASHTAGS SEO STRATEGIS: #belajarcoding #javascript #programmerindonesia #webdeveloper #codingindonesia #techtok #fyp
 --------------------------------------------------
 
 ▶️ ID KOMPOSISI REMOTION : py-loop
 📌 JUDUL VIDEO OPTIMAL   : Rahasia Belajar Looping Mudah di Python! 💻
-📝 DESKRIPSI PLATFORM    : Masih bingung tentang hal ini? Yuk simak tutorial singkat python untuk pemula. Solusi praktis agar kode rapi, efisien, dan mudah dipahami. Jangan lupa simpan video ini biar gak lupa!
+📝 DESKRIPSI PLATFORM    : Masih bingung tentang hal ini? Yuk simak tutorial singkat python untuk pemula. Solusi praktis agar kode rapi, efisien, dan mudah dipahami. Simpan video ini biar gak lupa!
 💬 TRANSKRIP SUARA (VO)  : "Belajar looping di Python gak pake ribet. Cuma butuh tiga baris kode ini, data kamu langsung berulang otomatis ke bawah."
 🏷️ HASHTAGS SEO STRATEGIS: #belajarcoding #python #programmerindonesia #webdeveloper #codingindonesia #techtok #fyp
 --------------------------------------------------
 
 ▶️ ID KOMPOSISI REMOTION : html-button
 📌 JUDUL VIDEO OPTIMAL   : Rahasia Bikin Tombol Keren dengan HTML! 💻
-📝 DESKRIPSI PLATFORM    : Masih bingung tentang hal ini? Yuk simak tutorial singkat web untuk pemula. Solusi praktis agar kode rapi, efisien, dan mudah dipahami. Jangan lupa simpan video ini biar gak lupa!
+📝 DESKRIPSI PLATFORM    : Masih bingung tentang hal ini? Yuk simak tutorial singkat web untuk pemula. Solusi praktis agar kode rapi, efisien, dan mudah dipahami. Simpan video ini biar gak lupa!
 💬 TRANSKRIP SUARA (VO)  : "Mau bikin tombol modern yang menyala di website kamu? Salin struktur kode HTML sederhana ini dan lihat hasilnya!"
 🏷️ HASHTAGS SEO STRATEGIS: #belajarcoding #web #programmerindonesia #webdeveloper #codingindonesia #techtok #fyp
 --------------------------------------------------
 
 ▶️ ID KOMPOSISI REMOTION : css-center
 📌 JUDUL VIDEO OPTIMAL   : Rahasia Trik Bikin Elemen ke Tengah! 💻
-📝 DESKRIPSI PLATFORM    : Masih bingung tentang hal ini? Yuk simak tutorial singkat web untuk pemula. Solusi praktis agar kode rapi, efisien, dan mudah dipahami. Jangan lupa simpan video ini biar gak lupa!
+📝 DESKRIPSI PLATFORM    : Masih bingung tentang hal ini? Yuk simak tutorial singkat web untuk pemula. Solusi praktis agar kode rapi, efisien, dan mudah dipahami. Simpan video ini biar gak lupa!
 💬 TRANSKRIP SUARA (VO)  : "Masih bingung cara bikin elemen posisi ke tengah di CSS? Pakai trik display flex, justify content, dan align items ini, langsung rapi!"
 🏷️ HASHTAGS SEO STRATEGIS: #belajarcoding #web #programmerindonesia #webdeveloper #codingindonesia #techtok #fyp
 --------------------------------------------------

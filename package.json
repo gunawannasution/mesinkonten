@@ -12,6 +12,7 @@
     "edge-tts": "^1.0.1",
     "mp3-duration": "^1.1.0",
     "msedge-tts": "^2.0.6",
+    "prismjs": "^1.30.0",
     "react": "19.2.3",
     "react-dom": "19.2.3",
     "remotion": "4.0.484",
@@ -21,6 +22,7 @@
   "devDependencies": {
     "@remotion/eslint-config-flat": "4.0.484",
     "@types/node": "^26.1.1",
+    "@types/prismjs": "^1.26.6",
     "@types/react": "19.2.7",
     "@types/web": "0.0.166",
     "@types/xml-escape": "^1.1.3",
@@ -34,7 +36,7 @@
     "upgrade": "remotion upgrade",
     "lint": "eslint src && tsc",
     "suara": "npx ts-node bikin-suara.ts",
-    "gas": "ts-node bikin-suara.ts && remotion render"
+    "gas": "npx ts-node bikin-suara.ts && remotion render"
   },
   "sideEffects": [
     "*.css"

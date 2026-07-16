@@ -6,8 +6,9 @@ import {
   spring,
   useCurrentFrame,
   useVideoConfig,
+  staticFile,
 } from "remotion";
-import React from "react";
+import React, { useMemo } from "react";
 import { VideoProps } from "../types/video";
 import { Header } from "../components/Header";
 import { CodeBox } from "../components/CodeBox";
@@ -31,11 +32,13 @@ export const BasicTutorial: React.FC<VideoProps> = ({
   };
 
   const isWeb = bahasa === "html" || bahasa === "css" || bahasa === "web";
-  const fullCode = isWeb ? [html, css, js].filter(Boolean).join("\n\n") : kode;
+  
+  const fullCode = isWeb 
+    ? `${html ? html + "\n\n" : ""}${
+        css ? css.replace(/{/g, " {\n  ").replace(/;/g, ";\n  ").replace(/}/g, "\n}\n\n") : ""
+      }${js ? js : ""}`.trim()
+    : kode;
 
-  // =========================
-  // CONFIG TIMES & DURATIONS
-  // =========================
   const startTypingFrame = 30;
   const totalLength = Math.max(fullCode.length, 1);
   const totalFrameKetik = Math.min(
@@ -45,9 +48,6 @@ export const BasicTutorial: React.FC<VideoProps> = ({
   const durasiKetikDetik = totalFrameKetik / fps;
   const typingEndFrame = startTypingFrame + totalFrameKetik;
 
-  // =========================
-  // TYPING LOGIC FOR WEB PREVIEW
-  // =========================
   const typingProgress = Math.max(
     0,
     Math.min((frame - startTypingFrame) / Math.max(totalFrameKetik, 1), 1)
@@ -55,20 +55,13 @@ export const BasicTutorial: React.FC<VideoProps> = ({
   const currentCharCount = Math.floor(totalLength * typingProgress);
   const liveFullCodeForWeb = fullCode.slice(0, currentCharCount);
 
-  // =========================
-  // SFX CLICK KEYBOARD TRACKER
-  // =========================
   const charFrameSebelumnya = Math.floor(
     totalLength * Math.max(0, Math.min((frame - 1 - startTypingFrame) / Math.max(totalFrameKetik, 1), 1))
   );
-  // Bunyikan klik keyboard jika jumlah karakter di frame ini bertambah
   const isMengetik = currentCharCount > charFrameSebelumnya && frame >= startTypingFrame && frame <= typingEndFrame;
 
-  // =========================
-  // OUTPUT GENERATOR
-  // =========================
   const outputStartFrame = typingEndFrame + 15;
-  const cleanOutput = output?.replace(/\r/g, "") || "➔ Program executed successfully.";
+  const cleanOutput = output?.trim() || "➔ Program executed successfully.";
   
   const outputProgress = Math.max(
     0,
@@ -77,9 +70,6 @@ export const BasicTutorial: React.FC<VideoProps> = ({
   const outputChars = Math.floor(cleanOutput.length * outputProgress);
   const liveOutputText = cleanOutput.slice(0, outputChars);
 
-  // =========================
-  // ACCURATE WEB PREVIEW SEGMENTATION
-  // =========================
   let previewHtml = "";
   let previewCss = "";
 
@@ -88,7 +78,6 @@ export const BasicTutorial: React.FC<VideoProps> = ({
       previewHtml = liveFullCodeForWeb;
     } else if (html) {
       previewHtml = html;
-      // Kurangi panjang teks html dan pemisah string "\n\n" (2 karakter)
       const sisaTeks = liveFullCodeForWeb.slice(html.length + 2);
       if (css) {
         previewCss = sisaTeks.slice(0, css.length);
@@ -98,24 +87,36 @@ export const BasicTutorial: React.FC<VideoProps> = ({
     }
   }
 
-  // =========================
-  // CINEMATIC ANIMATIONS
-  // =========================
   const entrance = spring({
     frame: Math.max(0, frame - startTypingFrame),
     fps,
     config: { damping: 15, mass: 0.6 },
   });
 
-  const cameraScale = interpolate(frame, [0, startTypingFrame, typingEndFrame], [1.05, 1.02, 1]);
-  const cameraY = interpolate(frame, [0, startTypingFrame, typingEndFrame], [-15, 5, 0]);
+  // UPGRADE ANIMASI: Kamera bergerak maju perlahan dari awal sampai akhir video (Ambient Zoom)
+  // Membuat video terasa dinamis dan tidak membosankan bagi mata penonton
+  const cameraScale = interpolate(frame, [0, durationInFrames], [1.02, 1.07]);
+  const cameraY = interpolate(frame, [0, startTypingFrame, typingEndFrame], [-10, 3, 0]);
   const progressPercent = (frame / durationInFrames) * 100;
 
-  // =========================
-  // SUB-RENDER: CONSOLE & LIVE WEB
-  // =========================
+  // ANIMASI UPGRADE: Opasitas teks output console memudar naik secara berjenjang
+  const outputOpacity = interpolate(frame, [outputStartFrame, outputStartFrame + 10], [0, 1], {
+    extrapolateLeft: "clamp",
+    extrapolateRight: "clamp",
+  });
+
+  const resolvedSuaraUrl = useMemo(() => {
+    if (!suaraUrl) return "";
+    if (suaraUrl.startsWith("/static")) return suaraUrl;
+    if (suaraUrl.startsWith("/public")) {
+      const jalurBersih = suaraUrl.replace("/public", "");
+      return staticFile(jalurBersih);
+    }
+    return staticFile(suaraUrl);
+  }, [suaraUrl]);
+
   const renderPreview = () => {
-    if (frame < startTypingFrame) return null;
+    if (frame < startTypingFrame) return <div style={{ flex: 1 }} />;
 
     if (isWeb) {
       const srcDoc = `
@@ -123,7 +124,17 @@ export const BasicTutorial: React.FC<VideoProps> = ({
         <html>
         <head>
           <style>
-            body { margin: 0; padding: 25px; font-family: sans-serif; color: #fff; background-color: #0b0f19; }
+            body { 
+              margin: 0; 
+              padding: 25px; 
+              font-family: sans-serif; 
+              color: #ffffff; 
+              background-color: #0b0f19; 
+              display: flex;
+              justify-content: center;
+              align-items: center;
+              height: 80vh;
+            }
             ${previewCss}
           </style>
         </head>
@@ -135,7 +146,7 @@ export const BasicTutorial: React.FC<VideoProps> = ({
       `;
 
       return (
-        <div style={{ flex: 1, background: "#0b0f19", borderRadius: 20, overflow: "hidden", transform: `scale(${entrance})`, opacity: entrance, border: "1px solid rgba(255,255,255,0.08)" }}>
+        <div style={{ flex: 1, background: "#0b0f19", borderRadius: 20, overflow: "hidden", transform: `scale(${entrance})`, opacity: entrance, border: "1px solid rgba(255,255,255,0.08)", boxShadow: "0 20px 50px rgba(0,0,0,0.3)" }}>
           <div style={{ height: 52, background: "#111625", borderBottom: "1px solid rgba(255,255,255,0.06)", display: "flex", alignItems: "center", padding: "0 20px", gap: 12 }}>
             <div style={{ display: "flex", gap: 6 }}>
               <div style={{ width: 12, height: 12, borderRadius: "50%", background: "#ff5f56" }} />
@@ -165,7 +176,6 @@ export const BasicTutorial: React.FC<VideoProps> = ({
           flexDirection: "column",
         }}
       >
-        {/* CONSOLE TOP BAR */}
         <div style={{ height: 52, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 18px", borderBottom: "1px solid rgba(255,255,255,0.06)", background: "linear-gradient(180deg, rgba(255,255,255,0.03), transparent)" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <div style={{ width: 11, height: 11, borderRadius: "50%", background: "#ff5f56" }} />
@@ -181,7 +191,6 @@ export const BasicTutorial: React.FC<VideoProps> = ({
           </div>
         </div>
 
-        {/* CONSOLE BODY */}
         <div style={{ flex: 1, padding: 28, fontFamily: "'Fira Code', monospace", position: "relative" }}>
           <div style={{ color: "#6b7280", fontSize: 18, marginBottom: 20 }}>
             $ {bahasa === "python" ? "python app.py" : "node index.js"}
@@ -191,7 +200,8 @@ export const BasicTutorial: React.FC<VideoProps> = ({
             <div style={{ color: "#fbbf24", fontSize: 22, fontWeight: 500 }}>➔ Running...</div>
           )}
 
-          <pre style={{ margin: 0, fontSize: 24, lineHeight: 1.7, whiteSpace: "pre-wrap", color: theme.primaryColor, textShadow: `0 0 12px ${theme.primaryColor}40` }}>
+          {/* UPGRADE VISUAL: Hasil output memudar naik secara lembut menggunakan variabel outputOpacity */}
+          <pre style={{ margin: 0, fontSize: 24, lineHeight: 1.7, whiteSpace: "pre-wrap", color: theme.primaryColor, textShadow: `0 0 12px ${theme.primaryColor}40`, opacity: outputOpacity }}>
             {liveOutputText}
           </pre>
         </div>
@@ -199,13 +209,10 @@ export const BasicTutorial: React.FC<VideoProps> = ({
     );
   };
 
-  // =========================
-  // VIEW SCREEN ASSEMBLY
-  // =========================
   return (
     <AbsoluteFill
       style={{
-        background: "#0a0b10",
+        background: "#08090d", // Sedikit lebih gelap premium untuk memaksimalkan kontras neon glow
         color: "#fff",
         padding: "50px 60px",
         display: "flex",
@@ -214,19 +221,13 @@ export const BasicTutorial: React.FC<VideoProps> = ({
         transform: `scale(${cameraScale}) translateY(${cameraY}px)`,
       }}
     >
-      {/* Backsound / Main Audio Stream */}
-      {suaraUrl && <Audio src={suaraUrl} />}
+      {resolvedSuaraUrl && <Audio src={resolvedSuaraUrl} />}
+      {isMengetik && <Audio src={staticFile("/click.mp3")} volume={0.25} />}
 
-      {/* SFX Klik Keyboard Mekanik */}
-      {isMengetik && <Audio src="/click.mp3" volume={0.25} />}
-
-      {/* Komponen Header yang Mengetik Otomatis */}
       <Header judul={judul} bahasa={bahasa} />
 
-      {/* Komponen Utama Kotak Coding */}
       <div style={{ display: "flex", flexDirection: "column", flex: 1, gap: 24, marginTop: 20 }}>
         <div style={{ flex: 1.2 }}>
-          {/* Kirim fullCode UTUH ke CodeBox karena pemotongan string ditangani internal oleh CodeBox */}
           <CodeBox kode={fullCode} bahasa={bahasa} durasiKetikDetik={durasiKetikDetik} />
         </div>
         
@@ -238,15 +239,15 @@ export const BasicTutorial: React.FC<VideoProps> = ({
         </div>
       </div>
 
-      {/* Garis Progress Bar Video TikTok */}
       <div
         style={{
           position: "absolute",
           bottom: 0,
           left: 0,
-          height: 8,
+          height: 10, // Sedikit lebih tebal agar bar kemajuan terlihat jelas di HP
           width: `${progressPercent}%`,
           background: `linear-gradient(90deg, ${theme.primaryColor}, #ffffff)`,
+          boxShadow: `0 0 15px ${theme.primaryColor}`,
         }}
       />
     </AbsoluteFill>

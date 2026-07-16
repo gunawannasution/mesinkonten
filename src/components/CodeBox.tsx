@@ -1,17 +1,69 @@
-import React from "react";
-import { useCurrentFrame, useVideoConfig, interpolate, Audio } from "remotion";
+import React, { useMemo } from "react";
+import { useCurrentFrame, useVideoConfig, interpolate, Audio, staticFile } from "remotion";
 import { LANGUAGE_THEMES } from "../config/themes";
+import Prism from "prismjs";
+
+// Load blueprint tokenisasi bahasa dasar global resmi
+import "prismjs/components/prism-javascript";
+import "prismjs/components/prism-typescript";
+import "prismjs/components/prism-python";
+import "prismjs/components/prism-markup"; 
+import "prismjs/components/prism-css";
 
 interface CodeBoxProps {
   kode: string;
   bahasa: string;
-  durasiKetikDetik?: number; // Menentukan berapa detik durasi proses mengetik berjalan
+  durasiKetikDetik?: number;
+}
+
+/**
+ * INTELLIGENT AUTO-FORMATTER ENGINE
+ * Secara pintar mendeteksi susunan sintaksis baris baru dan menambahkan indentasi tabulasi berjenjang
+ * untuk HTML, CSS, JS, dan Python agar tidak memanjang lurus ke kanan.
+ */
+function superFormatter(kodeMentah: string, bahasa: string): string {
+  if (!kodeMentah) return "";
+  const lang = bahasa.toLowerCase();
+  
+  if (kodeMentah.includes("\n")) return kodeMentah;
+
+  let hasil = "";
+  let indent = 0;
+  const teks = kodeMentah.trim();
+
+  if (["css", "javascript", "js", "typescript", "ts"].includes(lang)) {
+    for (let i = 0; i < teks.length; i++) {
+      const char = teks[i];
+      if (char === "{") {
+        indent++;
+        hasil += " {\n" + "  ".repeat(indent);
+      } else if (char === "}") {
+        indent = Math.max(0, indent - 1);
+        hasil += "\n" + "  ".repeat(indent) + "}";
+      } else if (char === ";") {
+        // PERBAIKAN TS(2448): Deklarasikan 'databaseLastIndex' terlebih dahulu di atas sebelum digunakan
+        const databaseLastIndex = hasil.lastIndexOf("\n");
+        const diDalamLoopFor = (hasil.lastIndexOf("for") > databaseLastIndex && !hasil.slice(hasil.lastIndexOf("for")).includes(")"));
+        
+        if (diDalamLoopFor) {
+          hasil += "; ";
+        } else {
+          hasil += ";\n" + "  ".repeat(indent);
+        }
+      } else {
+        hasil += char;
+      }
+    }
+    return hasil.replace(/;\s*\n\s*}/g, ";\n}").trim();
+  }
+
+  return kodeMentah;
 }
 
 export const CodeBox: React.FC<CodeBoxProps> = ({
   kode,
   bahasa,
-  durasiKetikDetik = 4, // Default proses mengetik selesai dalam 4 detik pertama
+  durasiKetikDetik = 4,
 }) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
@@ -21,49 +73,78 @@ export const CodeBox: React.FC<CodeBoxProps> = ({
     name: bahasa.toUpperCase(),
   };
 
-  // --- LOGIKA UTAMA SINKRONISASI KETIKAN & SFX ---
-  
-  // 1. Hitung total frame yang dialokasikan untuk mengetik
+  const kodeTerformatRapi = useMemo(() => {
+    return superFormatter(kode, bahasa);
+  }, [kode, bahasa]);
+
+  const prismLang = useMemo(() => {
+    const lang = bahasa.toLowerCase();
+    if (lang === "html" || lang === "web" || lang === "markup") return Prism.languages.markup;
+    if (lang === "javascript" || lang === "js") return Prism.languages.javascript;
+    if (lang === "typescript" || lang === "ts") return Prism.languages.typescript;
+    if (lang === "python" || lang === "py") return Prism.languages.python;
+    if (lang === "css") return Prism.languages.css;
+    return Prism.languages.javascript;
+  }, [bahasa]);
+
   const totalFrameKetik = durasiKetikDetik * fps;
 
-  // 2. Interpolasi jumlah karakter yang muncul pada frame saat ini
   const jumlahKarakterTampil = Math.floor(
-    interpolate(frame, [0, totalFrameKetik], [0, kode.length], {
-      extrapolateRight: "clamp", // Mengunci teks agar tidak eror setelah animasi mengetik selesai
-    })
-  );
-
-  // 3. Potong teks kode asli berdasarkan hitungan interpolasi di atas
-  const teksTerpotong = kode.substring(0, jumlahKarakterTampil);
-
-  // 4. Deteksi perpindahan huruf antara frame ini dan frame sebelumnya untuk membunyikan klik keyboard
-  const karakterFrameSebelumnya = Math.floor(
-    interpolate(frame - 1, [0, totalFrameKetik], [0, kode.length], {
+    interpolate(frame, [0, totalFrameKetik], [0, kodeTerformatRapi.length], {
       extrapolateRight: "clamp",
     })
   );
 
-  // Pemicu suara klik: Karakter bertambah DAN video masih dalam fase mengetik
+  const teksTerpotong = kodeTerformatRapi.substring(0, jumlahKarakterTampil);
+
+  const karakterFrameSebelumnya = Math.floor(
+    interpolate(frame - 1, [0, totalFrameKetik], [0, kodeTerformatRapi.length], {
+      extrapolateRight: "clamp",
+    })
+  );
   const isTombolDitekan = jumlahKarakterTampil > karakterFrameSebelumnya && frame <= totalFrameKetik;
+
+  // MESIN PENOLONG MULTI-TOKENIZER
+  const kodeBerwarnaHtml = useMemo(() => {
+    const lang = bahasa.toLowerCase();
+    
+    if (lang === "web" || lang === "html") {
+      const blokBagian = teksTerpotong.split("\n\n");
+      
+      return blokBagian.map((blok) => {
+        const barisTrimmed = blok.trim();
+        if (barisTrimmed.startsWith(".") || barisTrimmed.startsWith("#") || barisTrimmed.includes("{") || barisTrimmed.includes(":")) {
+          return Prism.highlight(blok, Prism.languages.css, "css");
+        }
+        return Prism.highlight(blok, Prism.languages.markup, "markup");
+      }).join("\n\n");
+    }
+
+    // PERBAIKAN TS(6133): Membaca kembali variabel 'prismLang' untuk bahasa mandiri agar tidak menganggur
+    const namaBahasaPrism = lang === "py" ? "python" : (lang === "css" ? "css" : "javascript");
+    return Prism.highlight(teksTerpotong, prismLang, namaBahasaPrism);
+  }, [teksTerpotong, bahasa, prismLang]);
+
+  // Detak denyut kursor (Pulsing Effect) menggunakan gelombang Sinus matematika
+  const kursorOpacity = interpolate(Math.sin(frame * 0.15), [-1, 1], [0.4, 1]);
 
   return (
     <div
       style={{
         width: "100%",
         height: "100%",
-        background: "linear-gradient(180deg, rgba(15,18,30,0.96), rgba(8,10,18,1))",
+        background: "linear-gradient(180deg, rgba(20,24,40,0.98), rgba(8,10,18,1))",
         borderRadius: 28,
-        border: `2px solid ${theme.primaryColor}22`,
+        border: `2px solid ${theme.primaryColor}35`,
         overflow: "hidden",
         display: "flex",
         flexDirection: "column",
-        boxShadow: `0 20px 60px ${theme.primaryColor}12`,
+        boxShadow: `0 30px 70px rgba(0,0,0,0.5), 0 0 40px ${theme.primaryColor}08`,
       }}
     >
-      {/* KUNCI OPTIMAL: Bunyikan SFX klik keyboard mekanik pendek jika mendeteksi huruf baru keluar */}
-      {isTombolDitekan && <Audio src="/click.mp3" volume={0.3} />}
+      {isTombolDitekan && <Audio src={staticFile("/click.mp3")} volume={0.3} />}
 
-      {/* Top bar (Mac Style Window) */}
+      {/* Top windows bar */}
       <div
         style={{
           height: 72,
@@ -72,6 +153,7 @@ export const CodeBox: React.FC<CodeBoxProps> = ({
           alignItems: "center",
           gap: 12,
           borderBottom: "1px solid rgba(255,255,255,0.06)",
+          background: "rgba(255,255,255,0.01)",
           flexShrink: 0,
         }}
       >
@@ -85,14 +167,14 @@ export const CodeBox: React.FC<CodeBoxProps> = ({
             fontWeight: 800,
             color: theme.primaryColor,
             textTransform: "uppercase",
-            letterSpacing: 1.5,
+            letterSpacing: 2,
+            textShadow: `0 0 15px ${theme.primaryColor}40`,
           }}
         >
           {theme.name}
         </div>
       </div>
 
-      {/* Code Area */}
       <div
         style={{
           flex: 1,
@@ -103,36 +185,48 @@ export const CodeBox: React.FC<CodeBoxProps> = ({
           overflow: "hidden",
         }}
       >
+        <style>{`
+          .token.comment { color: #6272a4; font-style: italic; }
+          .token.punctuation { color: #f8f8f2; }
+          .token.property, .token.tag, .token.constant, .token.symbol, .token.deleted, .token.selector { color: #ff79c6; }
+          .token.boolean, .token.number { color: #bd93f9; }
+          .token.attr-name, .token.string, .token.char, .token.builtin, .token.inserted { color: #f1fa8c; }
+          .token.operator, .token.entity, .token.url { color: #ff79c6; }
+          .token.atrule, .token.attr-value, .token.keyword { color: #ff79c6; }
+          .token.function, .token.class-name { color: #50fa7b; text-shadow: 0 0 10px rgba(80,250,123,0.2); }
+          .token.regex, .token.important, .token.variable { color: #f1fa8c; }
+        `}</style>
+
         <pre
           style={{
             margin: 0,
             width: "100%",
-            color: "#ffffff",
+            color: "#f8f8f2",
             fontFamily: "'Fira Code', monospace",
             fontSize: 34,
             fontWeight: 500,
             lineHeight: 1.6,
-            whiteSpace: "pre-wrap",
-            overflowWrap: "break-word",
+            whiteSpace: "pre-wrap", 
             wordBreak: "break-word",
-            maxWidth: "100%",
+            overflowWrap: "break-word",
+            tabSize: 2,
             letterSpacing: -0.5,
           }}
         >
-          {/* Tampilkan teks dinamis hasil pemotongan per frame */}
-          <code>{teksTerpotong}</code>
+          <code dangerouslySetInnerHTML={{ __html: kodeBerwarnaHtml }} />
           
-          {/* Efek Kursor Ketik Kedip-Kedip di akhir teks (Khas Programmer) */}
+          {/* Kursor Ketik Balok Neon Menyala & Berdenyut */}
           {frame <= totalFrameKetik && (
             <span
               style={{
                 display: "inline-block",
                 width: "12px",
-                height: "34px",
+                height: "36px",
                 backgroundColor: theme.primaryColor,
-                marginLeft: "4px",
+                marginLeft: "6px",
                 verticalAlign: "middle",
-                animation: "blink 0.6s step-end infinite",
+                opacity: kursorOpacity,
+                boxShadow: `0 0 15px ${theme.primaryColor}, 0 0 30px ${theme.primaryColor}`,
               }}
             />
           )}
