@@ -32,11 +32,12 @@
   },
   "scripts": {
     "dev": "remotion studio",
-    "build": "remotion bundle",
     "upgrade": "remotion upgrade",
     "lint": "eslint src && tsc",
     "suara": "npx ts-node bikin-suara.ts",
-    "gas": "npx ts-node bikin-suara.ts && remotion render"
+    "gas": "npx ts-node bikin-suara.ts && remotion render",
+    "start": "remotion preview",
+    "build": "remotion build src/index.ts public/bundle.js"
   },
   "sideEffects": [
     "*.css"
