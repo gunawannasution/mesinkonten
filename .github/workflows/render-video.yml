@@ -1,0 +1,43 @@
+name: Otomatisasi Render Video Massal
+
+# Robot ini akan berjalan otomatis setiap kali Anda melakukan 'Push' (Update) file dari HP
+on:
+  push:
+    paths:
+      - "konten.json" # Berjalan hanya jika file konten.json berubah
+  workflow_dispatch: # Memungkinkan tombol pemicu manual aktif di GitHub HP
+
+jobs:
+  proses-dan-render:
+    runs-on: ubuntu-latest # Menggunakan server Linux gratisan GitHub yang super cepat
+
+    steps:
+      - name: 1. Ambil Source Code Project
+        uses: actions/checkout@v4
+
+      - name: 2. Setup Lingkungan Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+          cache: "npm"
+
+      - name: 3. Instalasi Bahan Dependensi & Library Pemutar Video
+        run: |
+          npm ci
+          # GitHub Actions membutuhkan library headless browser untuk merekam frame Remotion
+          npx remotion browser ensure
+
+      - name: 4. Eksekusi Skrip Backend (Bikin Suara AI & SEO)
+        run: npx ts-node bikin-suara.ts
+
+      - name: 5. Render Massal Menjadi Video MP4 (Kecepatan Tinggi)
+        run: npx remotion render BasicTutorial out/video.mp4 --frames=0-1500
+        # Catatan: Sesuaikan 'BasicTutorial' dengan ID Komposisi di Root.tsx Anda
+
+      - name: 6. Amankan Berkas Hasil Video MP4 & Berkas SEO
+        uses: actions/upload-artifact@v4
+        with:
+          name: Video-Siap-Upload-TikTok
+          path: |
+            out/video.mp4
+            metadata_upload.txt
