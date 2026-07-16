@@ -6,7 +6,7 @@
     "kode": "const nama = 'Budi';\nlet umur = 20;\nconsole.log(`Halo, nama saya ${nama} dan umur saya ${umur} tahun.`);",
     "narasi": "Gini nih cara gampang buat nampilin teks gabungan di bahasa pemrograman JavaScript. Cukup pakai teknik string literal di dalam konsol log aja!",
     "durasiDetik": 8.592,
-    "output": "Halo, nama saya Budi dan umur saya 20 tahun."
+    "output": "➔ Halo, nama saya Budi dan umur saya 20 tahun."
   },
   {
     "id": "py-loop",
@@ -15,7 +15,7 @@
     "kode": "print('Memulai perulangan:')\nfor i in range(1, 4):\n    print(f'-> Baris ke-{i}')",
     "narasi": "Belajar looping di Python gak pake ribet. Cuma butuh tiga baris kode ini, data kamu langsung berulang otomatis ke bawah.",
     "durasiDetik": 7.848,
-    "output": "Memulai perulangan:\r\n-> Baris ke-1\r\n-> Baris ke-2\r\n-> Baris ke-3"
+    "output": "➔ Memulai perulangan:\r\n-> Baris ke-1\r\n-> Baris ke-2\r\n-> Baris ke-3"
   },
   {
     "id": "html-button",

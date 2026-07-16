@@ -1,11 +1,5 @@
-// src/components/Header.tsx
 import React from "react";
-import {
-  useCurrentFrame,
-  useVideoConfig,
-  spring,
-  interpolate,
-} from "remotion";
+import { useCurrentFrame, useVideoConfig, spring, interpolate } from "remotion";
 import { LANGUAGE_THEMES } from "../config/themes";
 
 interface HeaderProps {
@@ -13,10 +7,7 @@ interface HeaderProps {
   bahasa: string;
 }
 
-export const Header: React.FC<HeaderProps> = ({
-  judul,
-  bahasa,
-}) => {
+export const Header: React.FC<HeaderProps> = ({ judul, bahasa }) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
 
@@ -26,7 +17,7 @@ export const Header: React.FC<HeaderProps> = ({
     primaryColor: "#00ffcc",
   };
 
-  // Main spring animation
+  // 1. ANIMASI PEGAS UTAMA (Untuk Wadah & Badge)
   const animasiMasuk = spring({
     frame,
     fps,
@@ -37,21 +28,22 @@ export const Header: React.FC<HeaderProps> = ({
     },
   });
 
-  // Floating movement
-  const translateY =
-    interpolate(
-      animasiMasuk,
-      [0, 1],
-      [60, 0]
-    );
+  // Gerakan meluncur naik ke atas secara halus
+  const translateY = interpolate(animasiMasuk, [0, 1], [60, 0]);
+  
+  // Efek memudar muncul (Fade-in) untuk pendaran cahaya background
+  const glowOpacity = interpolate(animasiMasuk, [0, 1], [0, 1]);
 
-  // Fade in glow
-  const glowOpacity =
-    interpolate(
-      animasiMasuk,
-      [0, 1],
-      [0, 1]
-    );
+  // 2. KUNCI RETENSI: Efek Mengetik Lembut (Soft Typewriter) khusus untuk Judul Utama
+  // Kita buat teks judul muncul bertahap per huruf dalam durasi 20 frame pertama
+  const totalFrameKetikJudul = 20;
+  const jumlahKarakterJudulTampil = Math.floor(
+    interpolate(frame, [5, totalFrameKetikJudul], [0, judul.length], {
+      extrapolateLeft: "clamp",
+      extrapolateRight: "clamp",
+    })
+  );
+  const judulTerpotong = judul.substring(0, jumlahKarakterJudulTampil);
 
   return (
     <div
@@ -63,15 +55,11 @@ export const Header: React.FC<HeaderProps> = ({
         display: "flex",
         flexDirection: "column",
         gap: 35,
+        width: "100%", // Memastikan pembungkus mengambil lebar penuh
       }}
     >
       {/* Language Badge */}
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-        }}
-      >
+      <div style={{ display: "flex", alignItems: "center" }}>
         <span
           style={{
             backgroundColor: `${theme.primaryColor}18`,
@@ -92,12 +80,8 @@ export const Header: React.FC<HeaderProps> = ({
       </div>
 
       {/* Title */}
-      <div
-        style={{
-          position: "relative",
-        }}
-      >
-        {/* Glow background */}
+      <div style={{ position: "relative" }}>
+        {/* Glow background (Pendaran Cahaya Premium) */}
         <div
           style={{
             position: "absolute",
@@ -108,8 +92,8 @@ export const Header: React.FC<HeaderProps> = ({
             zIndex: 0,
           }}
         />
-
-        {/* Main title */}
+        
+        {/* Main title (Dinamis dengan Efek Ketik Lembut) */}
         <h1
           style={{
             position: "relative",
@@ -120,26 +104,44 @@ export const Header: React.FC<HeaderProps> = ({
             fontWeight: 900,
             letterSpacing: -2,
             maxWidth: "92%",
-            background:
-              "linear-gradient(180deg, #ffffff 0%, #d7dceb 100%)",
+            background: "linear-gradient(180deg, #ffffff 0%, #d7dceb 100%)",
             WebkitBackgroundClip: "text",
             WebkitTextFillColor: "transparent",
-            textShadow:
-              "0 8px 30px rgba(255,255,255,0.08)",
+            textShadow: "0 8px 30px rgba(255,255,255,0.08)",
           }}
         >
-          {judul}
+          {judulTerpotong}
+          
+          {/* Kursor ketik kecil khusus judul (Hilang otomatis saat ketikan judul selesai) */}
+          {frame < totalFrameKetikJudul && (
+            <span 
+              style={{ 
+                color: theme.primaryColor, 
+                WebkitTextFillColor: theme.primaryColor,
+                marginLeft: 4,
+                fontSize: 75,
+                fontWeight: 300,
+                position: "absolute",
+                lineHeight: 0.9
+              }}
+            >
+              |
+            </span>
+          )}
         </h1>
       </div>
 
-      {/* Accent Line */}
+      {/* Accent Line (Garis Aksen Sinematik Berbasis Skala/Scale) */}
       <div
         style={{
-          width: 180 * animasiMasuk,
+          width: 180,
           height: 6,
           borderRadius: 999,
           background: `linear-gradient(90deg, ${theme.primaryColor}, transparent)`,
           boxShadow: `0 0 20px ${theme.primaryColor}60`,
+          // PERBAIKAN: Menggunakan transform scaleX agar garis memanjang elegan dari kiri, bukan kaku
+          transform: `scaleX(${animasiMasuk})`,
+          transformOrigin: "left center",
         }}
       />
     </div>
