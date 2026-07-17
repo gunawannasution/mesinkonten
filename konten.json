@@ -9,5 +9,16 @@
     "narasi": "Masih bingung cara bikin efek teks menyala ala neon futuristik di website kamu? Sini kita bedah rahasianya pake CSS modern! Langkah pertama, wajib hukumnya buat setup background body jadi super gelap, di sini kita pake warna hitam onyx supaya pancaran cahaya neonnya keluar kontras. Langkah kedua, pastikan font-weight teks kamu diatur ke ukuran paling tebal atau sembilan ratus, tujuannya biar area pijaran cahayanya makin luas dan kokoh. Nah, langkah ketiga ini dia kunci utamanya, kita gunain properti text-shadow yang ditumpuk empat lapis sekaligus dipisahkan tanda koma. Lapisan pertama berukuran lima pixel untuk pendaran inti, disusul lapisan lima belas, empat puluh, sampai delapan puluh pixel untuk menciptakan efek kabut cahaya luar yang tebal. Gabungan trik ini bikin desain web kamu langsung kelihatan premium, estetik, dan auto-FYP!",
     "output": "Layout rendered successfully.",
     "durasiDetik": 49.776
+  },
+  {
+    "id": "js-shorthand-object",
+    "judul": "Trik Shorthand Property Object JS 🚀",
+    "bahasa": "web",
+    "html": "",
+    "css": "",
+    "js": "const nama = 'Budi';\nconst umur = 25;\n// Cara jadul\nconst userLama = { nama: nama, umur: umur };\n// Trik Shorthand\nconst userBaru = { nama, umur };",
+    "narasi": "Kalau nama properti dan nama variabel kamu sama di JavaScript, jangan tulis dua kali seperti ini. Cukup tulis nama variabelnya sekali saja di dalam objek. Kode kamu langsung jadi lebih ringkas, bersih, dan terlihat seperti ditulis oleh senior developer!",
+    "output": "Layout rendered successfully.",
+    "durasiDetik": 12.450
   }
 ]
