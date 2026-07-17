@@ -4,7 +4,6 @@ import * as path from "path";
 import { spawnSync } from "child_process";
 import { VideoProps } from "./src/types/video";
 import xmlEscape from "xml-escape";
-
 // @ts-ignore
 import getMp3Duration from "mp3-duration";
 
@@ -31,10 +30,9 @@ function eksekusiKodeAsli(bahasa: string, kode: string, id: string): string {
   try {
     fs.writeFileSync(tempFile, kode, "utf8");
     const result = spawnSync(runtime, [tempFile], { timeout: 3000, encoding: 'utf-8' });
-    
+
     if (result.error) return "➔ Output:\n⚠️ Proses Gagal (RTO / Batas Waktu Habis)";
     if (result.stderr) return `➔ Output:\n❌ Syntax Error! Periksa kembali penulisan kode kamu.`;
-    
     return result.stdout.trim() ? `➔ ${result.stdout.trim()}` : "➔ Kode berhasil dijalankan (tanpa output).";
   } catch (error: unknown) {
     return "➔ Output:\n⚠️ Terjadi kesalahan pada sistem eksekusi.";
@@ -72,7 +70,24 @@ async function jalankanTTS(): Promise<void> {
 
   if (!fs.existsSync(FOLDER_PUBLIC)) fs.mkdirSync(FOLDER_PUBLIC);
 
-  const dataKonten: KontenJson[] = JSON.parse(fs.readFileSync(PATH_KONTEN, "utf8"));
+  // 1. Ambil data mentah teks dari file konten.json
+  const rawData = fs.readFileSync(PATH_KONTEN, "utf8");
+  let dataKonten: KontenJson[] = [];
+
+  try {
+    const parsedData = JSON.parse(rawData);
+    
+    // 🌟 PROTEKSI GANDA: Paksa data menjadi format array jika pengguna lupa mengetik tanda kurung siku [...]
+    if (Array.isArray(parsedData)) {
+      dataKonten = parsedData;
+    } else {
+      dataKonten = [parsedData];
+    }
+  } catch (jsonErr) {
+    console.error("❌ File konten.json kamu rusak atau salah format tanda baca!", jsonErr);
+    return;
+  }
+
   const tts = new MsEdgeTTS();
   await tts.setMetadata("id-ID-ArdiNeural", OUTPUT_FORMAT.AUDIO_24KHZ_48KBITRATE_MONO_MP3);
 
@@ -80,9 +95,9 @@ async function jalankanTTS(): Promise<void> {
     try {
       const { id, bahasa, narasi, judul } = konten;
       const finalFile = path.join(FOLDER_PUBLIC, `suara-${id}.mp3`);
-      
+
       console.log(`🎙️ Memproses Audio AI: ${judul || id}`);
-      const narasiAman = xmlEscape(narasi); 
+      const narasiAman = xmlEscape(narasi);
 
       // ISOLASI LAYER CONCURRENCY: Mencegah Overwrite File
       const folderTempUnik = path.join(FOLDER_PUBLIC, `temp_${id}`);
@@ -92,8 +107,7 @@ async function jalankanTTS(): Promise<void> {
 
       await tts.toFile(folderTempUnik, narasiAman, { rate: "0%", pitch: "0Hz", volume: "0%" });
       const tempAudio = path.join(folderTempUnik, "audio.mp3");
-      
-      await sleep(600); 
+      await sleep(600);
 
       if (fs.existsSync(tempAudio)) {
         fs.copyFileSync(tempAudio, finalFile);
@@ -114,8 +128,8 @@ async function jalankanTTS(): Promise<void> {
       konten.durasiDetik = Number(durasiAkurat.toFixed(3));
       konten.output = output;
 
-      console.log(`   ➔ Durasi Riil: ${konten.durasiDetik} detik`);
-      console.log(`   ➔ Hasil Output: ${output.substring(0, 40).replace(/\n/g, " ")}...`);
+      console.log(`  ➔ Durasi Riil: ${konten.durasiDetik} detik`);
+      console.log(`  ➔ Hasil Output: ${output.substring(0, 40).replace(/\n/g, " ")}...`);
       console.log(`✅ Sukses Sinkronisasi ID: ${id}\n`);
 
     } catch (err: unknown) {
@@ -131,9 +145,9 @@ async function jalankanTTS(): Promise<void> {
 
   for (const konten of dataKonten) {
     teksMetadata += `▶️ ID KOMPOSISI REMOTION : ${konten.id}\n`;
-    teksMetadata += `📌 JUDUL VIDEO OPTIMAL   : Rahasia ${konten.judul}! 💻\n`;
-    teksMetadata += `📝 DESKRIPSI PLATFORM    : Masih bingung tentang hal ini? Yuk simak tutorial singkat ${konten.bahasa} untuk pemula. Solusi praktis agar kode rapi, efisien, dan mudah dipahami. Simpan video ini biar gak lupa!\n`;
-    teksMetadata += `💬 TRANSKRIP SUARA (VO)  : "${konten.narasi}"\n`;
+    teksMetadata += `📌 JUDUL VIDEO OPTIMAL : Rahasia ${konten.judul}! 💻\n`;
+    teksMetadata += `📝 DESKRIPSI PLATFORM : Masih bingung tentang hal ini? Yuk simak tutorial singkat ${konten.bahasa} untuk pemula. Solusi praktis agar kode rapi, efisien, dan mudah dipahami. Simpan video ini biar gak lupa!\n`;
+    teksMetadata += `💬 TRANSKRIP SUARA (VO) : "${konten.narasi}"\n`;
     teksMetadata += `🏷️ HASHTAGS SEO STRATEGIS: #belajarcoding #${konten.bahasa} #programmerindonesia #webdeveloper #codingindonesia #techtok #fyp\n`;
     teksMetadata += "--------------------------------------------------\n\n";
   }

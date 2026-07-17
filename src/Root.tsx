@@ -9,19 +9,23 @@ interface KontenItem extends VideoProps {
   durasiDetik?: number;
 }
 
-// Fungsi pembantu untuk menghitung durasi total frame per video secara dinamis
+// Fungsi pembantu untuk menghitung durasi total video secara presisi
 const hitungTotalFrameVideo = (konten: KontenItem): number => {
-  const durasiAudio = konten.durasiDetik || 8;
-  const introDetik = konten.durasiIntroDetik || 3; // Default 3 detik jika di json kosong
-  const outroDetik = konten.durasiOutroDetik || 3; // Default 3 detik jika di json kosong
+  // Mengambil nilai durasiDetik asli hasil hitungan akurat skrip generator TTS Anda
+  const durasiAudioUtama = konten.durasiDetik || 8;
   
-  // Total durasi = Audio + Buffer (1.5s) + Intro + Outro
-  const totalDetik = durasiAudio + 1.5 + introDetik + outroDetik;
-  return Math.ceil(totalDetik * 30);
+  // Visual intro dikunci 3 detik, visual outro dikunci 3 detik di akhir video
+  const introDetik = 3;
+  const outroDetik = 3;
+  
+  // Total durasi video = Panjang suara generator + 3 detik intro + 3 detik outro
+  const totalDetik = durasiAudioUtama + introDetik + outroDetik;
+  return Math.ceil(totalDetik * 30); // Dikonversi ke satuan Frame (30 FPS)
 };
 
 const BundleVideoCollection: React.FC<{ listKonten: KontenItem[] }> = ({ listKonten }) => {
   let currentFramePointer = 0;
+
   return (
     <>
       {listKonten.map((konten) => {
@@ -46,11 +50,10 @@ const BundleVideoCollection: React.FC<{ listKonten: KontenItem[] }> = ({ listKon
               suaraUrl={staticFile(fileAudio)}
               narasi={konten.narasi}
               output={konten.output}
-              // Meneruskan parameter baru ke komponen
-              durasiIntroDetik={konten.durasiIntroDetik}
-              durasiOutroDetik={konten.durasiOutroDetik}
-              teksIntroSub={konten.teksIntroSub}
-              teksOutroUtama={konten.teksOutroUtama}
+              durasiIntroDetik={3} // Mengunci durasi visual intro 3 detik
+              durasiOutroDetik={3} // Mengunci durasi visual outro 3 detik
+              teksIntroSub={konten.teksIntroSub || "Tutorial Kilat 1 Menit"}
+              teksOutroUtama={konten.teksOutroUtama || "Terima Kasih!"}
             />
           </Sequence>
         );
@@ -60,15 +63,16 @@ const BundleVideoCollection: React.FC<{ listKonten: KontenItem[] }> = ({ listKon
 };
 
 export const RemotionRoot: React.FC = () => {
-  const listKonten = dataKonten as KontenItem[];
-  
-  // Menghitung total frame untuk gabungan seluruh video di bundle
+  const listKonten = (dataKonten as unknown) as KontenItem[];
+
+  // Menghitung total akumulasi frame gabungan seluruh video bundle
   const totalFrameBundle = listKonten.reduce((total, konten) => {
     return total + hitungTotalFrameVideo(konten);
   }, 0);
 
   return (
     <>
+      {/* 1. Komposisi Massal (Bundling Gabungan Video) */}
       <Composition
         id="bundle-konten"
         component={BundleVideoCollection as unknown as React.ComponentType<Record<string, unknown>>}
@@ -80,6 +84,8 @@ export const RemotionRoot: React.FC = () => {
           listKonten,
         }}
       />
+
+      {/* 2. Komposisi Individual (Render per ID Video) */}
       {listKonten.map((konten) => {
         const fileAudio = `suara-${konten.id}.mp3`;
         const totalFramePasti = hitungTotalFrameVideo(konten);
@@ -103,11 +109,10 @@ export const RemotionRoot: React.FC = () => {
               suaraUrl: staticFile(fileAudio),
               narasi: konten.narasi,
               output: konten.output,
-              // Mendaftarkan properti baru di defaultProps Composition individual
-              durasiIntroDetik: konten.durasiIntroDetik,
-              durasiOutroDetik: konten.durasiOutroDetik,
-              teksIntroSub: konten.teksIntroSub,
-              teksOutroUtama: konten.teksOutroUtama,
+              durasiIntroDetik: 3,
+              durasiOutroDetik: 3,
+              teksIntroSub: konten.teksIntroSub || "Tutorial Kilat 1 Menit",
+              teksOutroUtama: konten.teksOutroUtama || "Terima Kasih!",
             }}
           />
         );

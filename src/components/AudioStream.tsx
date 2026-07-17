@@ -3,28 +3,33 @@ import { Audio, staticFile } from "remotion";
 
 interface AudioStreamProps {
   suaraUrl: string;
+  suaraIntroUrl?: string;
+  suaraOutroUrl?: string;
   isMengetik: boolean;
+  startTypingFrame: number;
+  frameOutroMulai: number;
 }
 
-export const AudioStream: React.FC<AudioStreamProps> = ({ suaraUrl, isMengetik }) => {
-  // Melakukan sanitasi jalur string audio hasil download backend
+export const AudioStream: React.FC<AudioStreamProps> = ({
+  suaraUrl,
+  isMengetik,
+}) => {
   const resolvedSuaraUrl = useMemo(() => {
     if (!suaraUrl) return "";
-    if (suaraUrl.startsWith("/static")) return suaraUrl;
-    if (suaraUrl.startsWith("/public")) {
-      const jalurBersih = suaraUrl.replace("/public", "");
-      return staticFile(jalurBersih);
-    }
-    return staticFile(suaraUrl);
+    return suaraUrl;
   }, [suaraUrl]);
 
   return (
     <>
-      {/* Memutar Voice Over AI Utama */}
-      {resolvedSuaraUrl && <Audio src={resolvedSuaraUrl} />}
-      
-      {/* Memutar SFX Klik Keyboard Mekanikal */}
-      {isMengetik && <Audio src={staticFile("/click.mp3")} volume={0.25} />}
+      {/* 🌟 SOLUSI AUDIO: Suara generator tunggal diputar utuh dari frame 0 tanpa pembatas sekuens */}
+      {resolvedSuaraUrl && (
+        <Audio src={resolvedSuaraUrl} startFrom={0} />
+      )}
+
+      {/* SFX Mekanikal papan ketik hanya berbunyi saat visual editor mulai mengetik */}
+      {isMengetik && (
+        <Audio src={staticFile("/click.mp3")} volume={0.25} />
+      )}
     </>
   );
 };
